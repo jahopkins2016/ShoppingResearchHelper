@@ -1,0 +1,145 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.15s, transform 0.15s;
+  display: block;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.cardDescription {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.emptyText {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.emptySubtext {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}
+
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.fab:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.05);
+}
+
+.form {
+  margin-top: 24px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.formInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 16px;
+  outline: none;
+  color: var(--color-text);
+  margin-bottom: 16px;
+  transition: border-color 0.15s;
+}
+
+.formInput:focus {
+  border-color: var(--color-primary);
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.createButton {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.createButton:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.createButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,0 +1,44 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.links {
+  display: flex;
+  gap: 24px;
+}
+
+.link {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--color-text);
+}
+
+.main {
+  flex: 1;
+  padding: 32px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pandoc \"C:/Projects/ShoppingResearchHelper/SaveIt_Product_Spec.docx\" -o /tmp/saveit_content.md)",
+      "Read(//tmp/**)",
+      "Bash(python -c \":*)",
+      "Bash(npm --version)",
+      "Bash(cmd.exe /c \"node --version && npm --version\")",
+      "Bash(cmd.exe /c \"node -v\")",
+      "Bash(cmd.exe /c \"where node\")"
+    ]
+  }
+}
