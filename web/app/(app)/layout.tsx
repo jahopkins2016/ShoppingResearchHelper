@@ -19,9 +19,11 @@ export default async function AppLayout({
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
-        <Link href="/collections" className={styles.logo}>
-          SaveIt
-        </Link>
+        <div className={styles.navLeft}>
+          <Link href="/collections" className={styles.logo}>
+            The Gallery
+          </Link>
+        </div>
         <div className={styles.links}>
           <Link href="/collections" className={styles.link}>
             Collections
@@ -32,6 +34,11 @@ export default async function AppLayout({
           <Link href="/settings" className={styles.link}>
             Settings
           </Link>
+        </div>
+        <div className={styles.navRight}>
+          <div className={styles.avatar}>
+            {user.email?.charAt(0).toUpperCase()}
+          </div>
         </div>
       </nav>
       <main className={styles.main}>{children}</main>

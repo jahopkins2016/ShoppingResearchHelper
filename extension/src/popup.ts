@@ -269,17 +269,18 @@ function renderSaveForm() {
     <div class="page-preview">
       ${imageSrc ? `<img class="preview-image" src="${escapeAttr(imageSrc)}" alt="" />` : ''}
       <div class="preview-info">
-        <div class="preview-title-row">
+        <div class="preview-label">Product Detected</div>
+        <span class="preview-title">${escapeHtml(title)}</span>
+        ${metadata?.price ? `<span class="preview-price">${escapeHtml(metadata.currency || '$')}${escapeHtml(metadata.price)}</span>` : ''}
+        <div class="preview-url">
           ${faviconSrc ? `<img class="preview-favicon" src="${escapeAttr(faviconSrc)}" alt="" />` : ''}
-          <span class="preview-title">${escapeHtml(title)}</span>
+          <span>${escapeHtml(displayUrl)}</span>
         </div>
-        <span class="preview-url">${escapeHtml(displayUrl)}</span>
-        ${metadata?.price ? `<span class="preview-price">${escapeHtml(metadata.currency || '')} ${escapeHtml(metadata.price)}</span>` : ''}
       </div>
     </div>
 
     <div class="form-section">
-      <label for="collection-select">Collection</label>
+      <label for="collection-select">Save to Collection</label>
       <select id="collection-select">
         ${collections.map((c) => `<option value="${escapeAttr(c.id)}"${c.id === defaultId ? ' selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
       </select>

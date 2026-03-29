@@ -3,71 +3,111 @@
 }
 
 .back {
-  font-size: 14px;
-  color: var(--color-primary);
-  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 12px;
+  transition: color 0.15s;
 }
 
 .back:hover {
-  text-decoration: underline;
-}
-
-.title {
-  font-size: 28px;
-  font-weight: 800;
   color: var(--color-text);
 }
 
+.headerRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.collectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--color-primary-container);
+  margin-bottom: 4px;
+}
+
+.title {
+  font-family: var(--font-headline);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.5px;
+}
+
 .description {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   margin-top: 4px;
+  font-weight: 500;
+}
+
+.itemCount {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .empty {
   text-align: center;
-  padding: 80px 0;
+  padding: 64px 32px;
+  background: var(--color-surface-container-low);
+  border-radius: var(--radius-xl);
 }
 
 .emptyText {
+  font-family: var(--font-headline);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
 }
 
 .emptySubtext {
   font-size: 14px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-top: 8px;
+  line-height: 1.5;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
 .card {
-  background: var(--color-surface);
-  border-radius: 16px;
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition: transform 0.2s;
   display: flex;
   flex-direction: column;
 }
 
+.card:nth-child(even) {
+  margin-top: 32px;
+}
+
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  transform: scale(0.98);
 }
 
 .imageWrap {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: var(--color-border);
+  background: var(--color-surface-container);
+  position: relative;
+}
+
+.card:nth-child(even) .imageWrap {
+  aspect-ratio: 1;
 }
 
 .image {
@@ -77,34 +117,42 @@
 }
 
 .cardBody {
-  padding: 16px;
+  padding: 12px 16px 16px;
 }
 
 .cardTitle {
-  font-size: 16px;
-  font-weight: 600;
+  font-family: var(--font-headline);
+  font-size: 15px;
+  font-weight: 700;
   color: var(--color-text);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .price {
-  font-size: 18px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--color-primary);
-  margin-top: 8px;
+  color: var(--color-primary-container);
 }
 
 .siteName {
-  font-size: 13px;
-  color: var(--color-text-muted);
+  font-size: 12px;
+  color: var(--color-text-secondary);
   margin-top: 4px;
+  font-weight: 500;
 }
 
 .notes {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   margin-top: 8px;
   font-style: italic;

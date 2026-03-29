@@ -31,9 +31,15 @@ export default async function CollectionDetailPage({
     <div>
       <div className={styles.header}>
         <Link href="/collections" className={styles.back}>
-          &larr; Collections
+          ← Collections
         </Link>
-        <h1 className={styles.title}>{collection.name}</h1>
+        <p className={styles.collectionLabel}>Curated Collection</p>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>{collection.name}</h1>
+          {items && items.length > 0 && (
+            <span className={styles.itemCount}>{items.length} Items</span>
+          )}
+        </div>
         {collection.description && (
           <p className={styles.description}>{collection.description}</p>
         )}
@@ -64,18 +70,17 @@ export default async function CollectionDetailPage({
                     alt={item.title ?? ""}
                     className={styles.image}
                   />
+                  {item.price && (
+                    <span className={styles.price}>
+                      {item.currency ?? "$"}{item.price}
+                    </span>
+                  )}
                 </div>
               )}
               <div className={styles.cardBody}>
                 <h2 className={styles.cardTitle}>
                   {item.title ?? item.url}
                 </h2>
-                {item.price && (
-                  <p className={styles.price}>
-                    {item.currency ?? ""}
-                    {item.price}
-                  </p>
-                )}
                 {item.site_name && (
                   <p className={styles.siteName}>{item.site_name}</p>
                 )}

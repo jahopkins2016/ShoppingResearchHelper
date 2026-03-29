@@ -14,13 +14,18 @@ export default async function SharedPage() {
     .eq("shared_with_user_id", user!.id)
     .eq("status", "accepted");
 
-  const collections = shares?.map((s: any) => s.collections).filter(Boolean) ?? [];
+  const items = shares?.map((s: any) => ({
+    collection: s.collections,
+    role: s.role,
+    id: s.id,
+  })).filter((s: any) => s.collection) ?? [];
 
   return (
     <div>
       <h1 className={styles.title}>Shared With Me</h1>
+      <p className={styles.subtitle}>Collections curated by others, curated for you.</p>
 
-      {collections.length === 0 ? (
+      {items.length === 0 ? (
         <div className={styles.empty}>
           <p className={styles.emptyText}>Nothing shared yet.</p>
           <p className={styles.emptySubtext}>
@@ -29,16 +34,23 @@ export default async function SharedPage() {
         </div>
       ) : (
         <div className={styles.grid}>
-          {collections.map((c: any) => (
+          {items.map((item: any) => (
             <Link
-              key={c.id}
-              href={`/collections/${c.id}`}
+              key={item.id}
+              href={`/collections/${item.collection.id}`}
               className={styles.card}
             >
-              <h2 className={styles.cardTitle}>{c.name}</h2>
-              {c.description && (
-                <p className={styles.cardDescription}>{c.description}</p>
-              )}
+              <div className={styles.cardContent}>
+                <h2 className={styles.cardTitle}>{item.collection.name}</h2>
+                <div className={styles.badgeRow}>
+                  <span className={`${styles.badge} ${item.role === 'editor' ? styles.badgeEditor : styles.badgeViewer}`}>
+                    {item.role === 'editor' ? 'EDITOR' : 'VIEWER'}
+                  </span>
+                </div>
+                {item.collection.description && (
+                  <p className={styles.cardDescription}>{item.collection.description}</p>
+                )}
+              </div>
             </Link>
           ))}
         </div>

@@ -1,55 +1,98 @@
 .title {
+  font-family: var(--font-headline);
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
   margin-bottom: 24px;
 }
 
 .empty {
   text-align: center;
-  padding: 80px 0;
+  padding: 64px 32px;
+  background: var(--color-surface-container-low);
+  border-radius: var(--radius-xl);
 }
 
 .emptyText {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.emptySubtext {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  margin-top: 8px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.card {
-  background: var(--color-surface);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.15s, transform 0.15s;
-  display: block;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.cardTitle {
+  font-family: var(--font-headline);
   font-size: 18px;
   font-weight: 700;
   color: var(--color-text);
 }
 
-.cardDescription {
+.emptySubtext {
   font-size: 14px;
   color: var(--color-text-secondary);
-  margin-top: 4px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.3s;
+  display: block;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.04);
+}
+
+.cardContent {
+  padding: 20px;
+}
+
+.cardTitle {
+  font-family: var(--font-headline);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.badgeEditor {
+  background: rgba(0, 74, 198, 0.1);
+  color: #004ac6;
+}
+
+.badgeViewer {
+  background: rgba(73, 92, 149, 0.1);
+  color: #495c95;
+}
+
+.cardDescription {
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }

@@ -12,7 +12,8 @@ export default async function CollectionsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Collections</h1>
+        <h1 className={styles.title}>My Collections</h1>
+        <p className={styles.subtitle}>Your private archive of inspiration.</p>
       </div>
       <CollectionsList initialCollections={collections ?? []} />
     </div>
