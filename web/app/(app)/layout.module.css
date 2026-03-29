@@ -223,6 +223,38 @@
 .sidebarBottom {
   margin-top: auto;
   padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.extensionBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.extensionBanner:hover {
+  opacity: 0.85;
+}
+
+.extensionBannerTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-on-primary-fixed);
+}
+
+.extensionBannerSub {
+  font-size: 11px;
+  color: var(--color-on-primary-fixed);
+  opacity: 0.75;
+  margin-top: 1px;
 }
 
 .addBookmarkBtn {

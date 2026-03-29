@@ -67,6 +67,13 @@ export default async function AppLayout({
           </nav>
 
           <div className={styles.sidebarBottom}>
+            <Link href="/get-extension" className={styles.extensionBanner}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <div>
+                <div className={styles.extensionBannerTitle}>Get the Extension</div>
+                <div className={styles.extensionBannerSub}>Save from any website</div>
+              </div>
+            </Link>
             <Link href="/collections" className={styles.addBookmarkBtn}>
               + Add New Bookmark
             </Link>
