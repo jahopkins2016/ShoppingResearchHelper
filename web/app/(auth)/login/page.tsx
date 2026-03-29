@@ -1,19 +1,40 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<"login" | "signup">(
+    searchParams.get("mode") === "signup" ? "signup" : "login"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
+  async function handleGoogleSignIn() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/collections`,
+      },
+    });
+    if (error) setError(error.message);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,6 +66,32 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+
+      // After successful signup, check for referral code
+      const refCode = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('saveit_ref='))
+        ?.split('=')[1];
+
+      if (refCode) {
+        // Look up the referrer by their referral_code
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', refCode)
+          .single();
+
+        if (referrer) {
+          await supabase.from('referrals').insert({
+            referrer_id: referrer.id,
+            referred_email: email,
+            status: 'signed_up',
+          });
+        }
+        // Clear the cookie
+        document.cookie = 'saveit_ref=; Max-Age=0; path=/';
+      }
+
       setMessage("Check your email for a confirmation link!");
       setLoading(false);
     }
@@ -128,7 +175,7 @@ export default function LoginPage() {
         </div>
 
         {/* Google OAuth */}
-        <button type="button" className={styles.googleButton}>
+        <button type="button" className={styles.googleButton} onClick={handleGoogleSignIn}>
           Continue with Google
         </button>
 

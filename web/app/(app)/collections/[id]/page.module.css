@@ -157,3 +157,135 @@
   margin-top: 8px;
   font-style: italic;
 }
+
+/* Add Item button */
+.addButtonWrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary-container);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.addButton:hover {
+  opacity: 0.85;
+}
+
+/* Price Drop badge */
+.priceDrop {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.priceDrop:hover {
+  opacity: 0.85;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modalContent {
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.modalTitle {
+  font-family: var(--font-headline);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-surface-container);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: var(--color-surface-container-low);
+  color: var(--color-text);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modalInput:focus {
+  border-color: var(--color-primary-container);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modalCancel {
+  padding: 8px 18px;
+  border: 1px solid var(--color-surface-container);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modalCancel:hover {
+  background: var(--color-surface-container-low);
+}
+
+.modalSave {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary-container);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.modalSave:hover {
+  opacity: 0.85;
+}
+
+.modalSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

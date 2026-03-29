@@ -9,17 +9,47 @@ export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState<string>("");
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralCount, setReferralCount] = useState<number>(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setEmail(user?.email ?? "");
+      if (!user) return;
+      setEmail(user.email ?? "");
+
+      supabase
+        .from("profiles")
+        .select("referral_code")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.referral_code) setReferralCode(data.referral_code);
+        });
+
+      supabase
+        .from("referrals")
+        .select("id", { count: "exact", head: true })
+        .eq("referrer_id", user.id)
+        .eq("status", "signed_up")
+        .then(({ count }) => {
+          setReferralCount(count ?? 0);
+        });
     });
-  }, [supabase.auth]);
+  }, [supabase]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  }
+
+  function handleCopyLink() {
+    const link = `https://saveit.app/join?ref=${referralCode}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   return (
@@ -70,6 +100,33 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Referral section */}
+      {referralCode && (
+        <div className={styles.menuGroup}>
+          <h4 className={styles.menuGroupLabel}>REFERRALS</h4>
+          <div className={styles.referralCard}>
+            <p className={styles.referralHeading}>Invite friends to SaveIt</p>
+            <p className={styles.referralStat}>
+              <strong>{referralCount}</strong> friend{referralCount !== 1 ? "s" : ""} joined
+            </p>
+            <div className={styles.referralLinkRow}>
+              <input
+                className={styles.referralLinkInput}
+                type="text"
+                readOnly
+                value={`https://saveit.app/join?ref=${referralCode}`}
+              />
+              <button
+                className={styles.copyButton}
+                onClick={handleCopyLink}
+              >
+                {copied ? "Copied!" : "Copy Link"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <button className={styles.signOutButton} onClick={handleSignOut}>
         Sign Out

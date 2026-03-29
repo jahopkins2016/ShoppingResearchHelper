@@ -10,6 +10,8 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginScreen() {
@@ -18,6 +20,31 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
+
+  async function handleGoogleSignIn() {
+    try {
+      const redirectTo = makeRedirectUri();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+      if (error) throw error;
+      if (data.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        if (result.type === 'success') {
+          const url = result.url;
+          const params = new URLSearchParams(url.split('#')[1] || url.split('?')[1] || '');
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({ access_token, refresh_token });
+          }
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
+  }
 
   async function handleAuth() {
     if (!email || !password) {
@@ -132,7 +159,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Google OAuth */}
-        <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.googleButton} activeOpacity={0.9} onPress={handleGoogleSignIn}>
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 

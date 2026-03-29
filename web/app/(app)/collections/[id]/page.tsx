@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import CollectionItems from "./collection-items";
 import styles from "./page.module.css";
 
 export default async function CollectionDetailPage({
@@ -45,53 +46,7 @@ export default async function CollectionDetailPage({
         )}
       </div>
 
-      {!items || items.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>No items yet.</p>
-          <p className={styles.emptySubtext}>
-            Use the browser extension or share sheet to save items here.
-          </p>
-        </div>
-      ) : (
-        <div className={styles.grid}>
-          {items.map((item) => (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.card}
-            >
-              {item.image_url && (
-                <div className={styles.imageWrap}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.image_url}
-                    alt={item.title ?? ""}
-                    className={styles.image}
-                  />
-                  {item.price && (
-                    <span className={styles.price}>
-                      {item.currency ?? "$"}{item.price}
-                    </span>
-                  )}
-                </div>
-              )}
-              <div className={styles.cardBody}>
-                <h2 className={styles.cardTitle}>
-                  {item.title ?? item.url}
-                </h2>
-                {item.site_name && (
-                  <p className={styles.siteName}>{item.site_name}</p>
-                )}
-                {item.notes && (
-                  <p className={styles.notes}>{item.notes}</p>
-                )}
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
+      <CollectionItems initialItems={items ?? []} collectionId={id} />
     </div>
   );
 }

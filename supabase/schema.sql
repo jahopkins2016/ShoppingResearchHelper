@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   display_name text,
   avatar_url text,
   email text not null,
+  referral_code text unique,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -17,8 +18,8 @@ create table if not exists public.profiles (
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email);
+  insert into public.profiles (id, email, referral_code)
+  values (new.id, new.email, substr(md5(random()::text), 1, 8));
   return new;
 end;
 $$ language plpgsql security definer;
@@ -67,12 +68,28 @@ create table if not exists public.items (
   site_name text,
   site_favicon_url text,
   enrichment_status enrichment_status default 'pending',
+  price_drop_seen boolean default true,
+  lowest_price text,
   notes text,
   is_archived boolean default false,
   sort_order integer default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- ============================================================
+-- PRICE HISTORY
+-- ============================================================
+create table if not exists public.price_history (
+  id uuid primary key default gen_random_uuid(),
+  item_id uuid not null references public.items(id) on delete cascade,
+  price text,
+  currency text,
+  checked_at timestamptz default now()
+);
+
+create index if not exists idx_price_history_item_checked
+  on public.price_history (item_id, checked_at desc);
 
 -- ============================================================
 -- COLLECTION SHARES
@@ -99,12 +116,31 @@ create table if not exists public.collection_shares (
 );
 
 -- ============================================================
+-- REFERRALS
+-- ============================================================
+do $$ begin
+  create type referral_status as enum ('pending', 'signed_up');
+exception when duplicate_object then null;
+end $$;
+
+create table if not exists public.referrals (
+  id uuid primary key default gen_random_uuid(),
+  referrer_id uuid not null references public.profiles(id) on delete cascade,
+  referred_email text not null,
+  referred_user_id uuid references public.profiles(id) on delete set null,
+  status referral_status not null default 'pending',
+  created_at timestamptz default now()
+);
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 alter table public.profiles enable row level security;
 alter table public.collections enable row level security;
 alter table public.items enable row level security;
 alter table public.collection_shares enable row level security;
+alter table public.price_history enable row level security;
+alter table public.referrals enable row level security;
 
 -- profiles
 create policy "Users can view their own profile"
@@ -161,3 +197,27 @@ create policy "Shared users can view and update their own share"
       select email from public.profiles where id = auth.uid()
     )
   );
+
+-- price_history
+create policy "Users can view price history for their items"
+  on public.price_history for select
+  using (
+    item_id in (select id from public.items where user_id = auth.uid())
+  );
+
+create policy "Service role can insert price history"
+  on public.price_history for insert
+  with check (true);
+
+-- referrals
+create policy "Users can view their own referrals"
+  on public.referrals for select
+  using (referrer_id = auth.uid());
+
+create policy "Users can insert referrals"
+  on public.referrals for insert
+  with check (referrer_id = auth.uid());
+
+create policy "Service role can update referrals"
+  on public.referrals for update
+  using (true);

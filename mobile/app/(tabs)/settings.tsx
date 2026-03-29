@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Share } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 type Profile = {
-  display_name: string | null;
-  avatar_url: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  referral_code?: string | null;
   email?: string;
 };
 
@@ -20,10 +21,18 @@ export default function SettingsScreen() {
     if (!user) return;
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('display_name, avatar_url, referral_code')
       .eq('id', user.id)
       .single();
     setProfile({ ...data, email: user.email });
+  }
+
+  async function handleInvite() {
+    const code = profile?.referral_code;
+    if (!code) return;
+    await Share.share({
+      message: `I've been saving products and tracking prices with SaveIt. Join me! https://saveit.app/join?ref=${code}`,
+    });
   }
 
   async function handleSignOut() {
@@ -96,6 +105,20 @@ export default function SettingsScreen() {
           </View>
         </View>
       ))}
+
+      {/* Invite a Friend */}
+      <View style={styles.menuGroup}>
+        <Text style={styles.menuGroupLabel}>SHARE</Text>
+        <View style={styles.menuCard}>
+          <TouchableOpacity style={styles.menuItem} onPress={handleInvite} activeOpacity={0.7}>
+            <View style={styles.menuItemLeft}>
+              <Text style={styles.menuIcon}>🎁</Text>
+              <Text style={styles.menuLabel}>Invite a Friend</Text>
+            </View>
+            <Text style={styles.menuChevron}>›</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Sign Out */}
       <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut} activeOpacity={0.9}>
