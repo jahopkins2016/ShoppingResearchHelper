@@ -68,8 +68,7 @@
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 74, 198, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 74, 198, 0.1);
 }
 
 .cardCover {
@@ -92,6 +91,13 @@
   padding: 14px 16px 16px;
 }
 
+.cardBodyRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .cardTitle {
   font-family: var(--font-headline);
   font-size: 16px;
@@ -109,6 +115,26 @@
 .cardUpdated {
   font-size: 12px;
   color: var(--color-text-muted);
+}
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-surface-container-high);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.shareBtn:hover {
+  background: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
 }
 
 /* ── New collection placeholder card ── */

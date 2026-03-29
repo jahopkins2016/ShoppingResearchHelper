@@ -51,6 +51,7 @@ export default function CollectionsList({
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -75,6 +76,27 @@ export default function CollectionsList({
     }
     setCreating(false);
     router.refresh();
+  }
+
+  async function handleShare(e: React.MouseEvent, collection: Collection) {
+    e.preventDefault();
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/collections/${collection.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: collection.name,
+          text: `Check out my collection "${collection.name}" on SaveIt`,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedId(collection.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   }
 
   return (
@@ -154,11 +176,27 @@ export default function CollectionsList({
                 <div className={styles.cardOverlay} />
               </div>
               <div className={styles.cardBody}>
-                <h2 className={styles.cardTitle}>{c.name}</h2>
-                <div className={styles.cardMeta}>
-                  <span className={styles.cardUpdated}>
-                    Updated {timeAgo(c.created_at)}
-                  </span>
+                <div className={styles.cardBodyRow}>
+                  <div>
+                    <h2 className={styles.cardTitle}>{c.name}</h2>
+                    <div className={styles.cardMeta}>
+                      <span className={styles.cardUpdated}>
+                        Updated {timeAgo(c.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className={styles.shareBtn}
+                    onClick={(e) => handleShare(e, c)}
+                    aria-label={copiedId === c.id ? "Link copied" : "Share collection"}
+                    title={copiedId === c.id ? "Link copied!" : "Share"}
+                  >
+                    {copiedId === c.id ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    )}
+                  </button>
                 </div>
               </div>
             </Link>
