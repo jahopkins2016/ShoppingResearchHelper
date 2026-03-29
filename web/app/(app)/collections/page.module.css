@@ -1,5 +1,17 @@
+/* ── Header ── */
 .header {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
 .title {
@@ -10,30 +22,74 @@
   letter-spacing: -0.5px;
 }
 
-.subtitle {
+.count {
   font-size: 14px;
-  color: var(--color-text-secondary);
-  margin-top: 4px;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.createBtn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #004ac6, #2563eb);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.createBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+}
+
+/* ── Grid ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
 
+/* ── Card ── */
 .card {
   background: var(--color-surface-container-lowest);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.25s, box-shadow 0.25s;
   display: block;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.04);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 74, 198, 0.08);
+}
+
+.cardCover {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.card:hover .cardCover {
+  /* subtle zoom on hover */
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45) 0%, transparent 60%);
+}
+
+.cardBody {
+  padding: 14px 16px 16px;
 }
 
 .cardTitle {
@@ -41,15 +97,45 @@
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
-  padding: 16px 16px 4px;
+  margin-bottom: 4px;
 }
 
-.cardDescription {
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardUpdated {
   font-size: 12px;
-  color: var(--color-text-secondary);
-  padding: 0 16px 16px;
+  color: var(--color-text-muted);
 }
 
+/* ── New collection placeholder card ── */
+.cardNew {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 240px;
+  border: 2px dashed var(--color-outline-variant);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cardNew:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(0, 74, 198, 0.03);
+}
+
+/* ── Empty state ── */
 .empty {
   text-align: center;
   padding: 64px 32px;
@@ -71,29 +157,9 @@
   line-height: 1.5;
 }
 
-.fab {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #004ac6, #2563eb);
-  color: #fff;
-  border: none;
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.3);
-  transition: transform 0.15s;
-}
-
-.fab:hover {
-  transform: scale(1.05);
-}
-
+/* ── Create form ── */
 .form {
-  margin-top: 24px;
+  margin-bottom: 24px;
   background: var(--color-surface-container-lowest);
   border-radius: var(--radius);
   padding: 24px;
@@ -110,6 +176,7 @@
   color: var(--color-text);
   margin-bottom: 16px;
   transition: all 0.2s;
+  font-family: var(--font-body);
 }
 
 .formInput:focus {
@@ -158,4 +225,144 @@
 .createButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ── FAB (mobile only) ── */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #004ac6, #2563eb);
+  color: #fff;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.3);
+  transition: transform 0.15s;
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .fab {
+    display: block;
+  }
+  .createBtn {
+    display: none;
+  }
+  .cardNew {
+    display: none;
+  }
+}
+
+.fab:hover {
+  transform: scale(1.05);
+}
+
+/* ── Shared with me section ── */
+.sharedSection {
+  margin-top: 48px;
+}
+
+.sharedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sharedTitle {
+  font-family: var(--font-headline);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.viewAllLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  transition: opacity 0.15s;
+}
+
+.viewAllLink:hover {
+  opacity: 0.8;
+}
+
+.sharedEmpty {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  padding: 24px 0;
+}
+
+.sharedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sharedRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--color-surface-container-lowest);
+  transition: background 0.15s;
+}
+
+.sharedRow:hover {
+  background: var(--color-surface-container-low);
+}
+
+.sharedRowThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--color-surface-container-high);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.sharedRowInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sharedRowName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sharedRowRole {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.roleEditor {
+  background: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
+}
+
+.roleViewer {
+  background: var(--color-surface-container-high);
+  color: var(--color-text-secondary);
 }

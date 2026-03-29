@@ -153,13 +153,27 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Validate service role key
+  // Validate caller: accept service role key OR a valid user JWT
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
+  if (!authHeader) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+  const isServiceRole = token === serviceRoleKey;
+
+  if (!isServiceRole) {
+    // Verify the user JWT is valid
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   let itemId: string;
