@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { APP_VERSION } from "@/lib/version";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <span className="version-badge">v{APP_VERSION}</span>
+      </body>
     </html>
   );
 }
