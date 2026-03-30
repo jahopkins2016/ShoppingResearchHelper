@@ -9,6 +9,7 @@ interface Item {
   url: string;
   title: string | null;
   image_url: string | null;
+  cached_image_path: string | null;
   price: string | null;
   currency: string | null;
   site_name: string | null;
@@ -29,6 +30,11 @@ export default function CollectionItems({
   const [showModal, setShowModal] = useState(false);
   const [url, setUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareEmail, setShareEmail] = useState("");
+  const [shareRole, setShareRole] = useState<"viewer" | "editor">("viewer");
+  const [sharing, setSharing] = useState(false);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -71,6 +77,51 @@ export default function CollectionItems({
     }
   }
 
+  async function handleShare() {
+    const email = shareEmail.trim();
+    if (!email) return;
+
+    setSharing(true);
+    setShareMsg(null);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("collection_shares")
+        .insert({
+          collection_id: collectionId,
+          shared_by: user.id,
+          shared_with_email: email,
+          role: shareRole,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        setShareMsg("Failed to share: " + error.message);
+        return;
+      }
+
+      // Fire and forget invite email
+      supabase.functions.invoke("send-invite-email", {
+        body: { share_id: data.id },
+      });
+
+      setShareMsg("Invitation sent!");
+      setShareEmail("");
+      setTimeout(() => {
+        setShowShareModal(false);
+        setShareMsg(null);
+      }, 1500);
+    } finally {
+      setSharing(false);
+    }
+  }
+
   async function dismissPriceDrop(itemId: string) {
     await supabase
       .from("items")
@@ -88,6 +139,12 @@ export default function CollectionItems({
     return (
       <>
         <div className={styles.addButtonWrap}>
+          <button
+            className={styles.shareButton}
+            onClick={() => setShowShareModal(true)}
+          >
+            Share
+          </button>
           <button
             className={styles.addButton}
             onClick={() => setShowModal(true)}
@@ -113,6 +170,22 @@ export default function CollectionItems({
             }}
           />
         )}
+        {showShareModal && (
+          <ShareModal
+            email={shareEmail}
+            setEmail={setShareEmail}
+            role={shareRole}
+            setRole={setShareRole}
+            sharing={sharing}
+            message={shareMsg}
+            onShare={handleShare}
+            onCancel={() => {
+              setShowShareModal(false);
+              setShareEmail("");
+              setShareMsg(null);
+            }}
+          />
+        )}
       </>
     );
   }
@@ -120,6 +193,12 @@ export default function CollectionItems({
   return (
     <>
       <div className={styles.addButtonWrap}>
+        <button
+          className={styles.shareButton}
+          onClick={() => setShowShareModal(true)}
+        >
+          Share
+        </button>
         <button
           className={styles.addButton}
           onClick={() => setShowModal(true)}
@@ -136,11 +215,11 @@ export default function CollectionItems({
             rel="noopener noreferrer"
             className={styles.card}
           >
-            {item.image_url && (
+            {(item.cached_image_path || item.image_url) && (
               <div className={styles.imageWrap}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.image_url}
+                  src={(item.cached_image_path || item.image_url)!}
                   alt={item.title ?? ""}
                   className={styles.image}
                 />
@@ -183,6 +262,22 @@ export default function CollectionItems({
           onCancel={() => {
             setShowModal(false);
             setUrl("");
+          }}
+        />
+      )}
+      {showShareModal && (
+        <ShareModal
+          email={shareEmail}
+          setEmail={setShareEmail}
+          role={shareRole}
+          setRole={setShareRole}
+          sharing={sharing}
+          message={shareMsg}
+          onShare={handleShare}
+          onCancel={() => {
+            setShowShareModal(false);
+            setShareEmail("");
+            setShareMsg(null);
           }}
         />
       )}
@@ -232,6 +327,94 @@ function Modal({
             disabled={saving || !url.trim()}
           >
             {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShareModal({
+  email,
+  setEmail,
+  role,
+  setRole,
+  sharing,
+  message,
+  onShare,
+  onCancel,
+}: {
+  email: string;
+  setEmail: (v: string) => void;
+  role: "viewer" | "editor";
+  setRole: (v: "viewer" | "editor") => void;
+  sharing: boolean;
+  message: string | null;
+  onShare: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className={styles.modalOverlay} onClick={onCancel}>
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className={styles.modalTitle}>Share Collection</h3>
+        {message && (
+          <p
+            className={
+              message.startsWith("Failed")
+                ? styles.shareError
+                : styles.shareSuccess
+            }
+          >
+            {message}
+          </p>
+        )}
+        <input
+          type="email"
+          className={styles.modalInput}
+          placeholder="colleague@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoFocus
+        />
+        <div className={styles.roleSelect}>
+          <label className={styles.roleLabel}>
+            <input
+              type="radio"
+              name="role"
+              value="viewer"
+              checked={role === "viewer"}
+              onChange={() => setRole("viewer")}
+            />
+            Viewer
+          </label>
+          <label className={styles.roleLabel}>
+            <input
+              type="radio"
+              name="role"
+              value="editor"
+              checked={role === "editor"}
+              onChange={() => setRole("editor")}
+            />
+            Editor
+          </label>
+        </div>
+        <div className={styles.modalActions}>
+          <button
+            className={styles.modalCancel}
+            onClick={onCancel}
+            disabled={sharing}
+          >
+            Cancel
+          </button>
+          <button
+            className={styles.modalSave}
+            onClick={onShare}
+            disabled={sharing || !email.trim()}
+          >
+            {sharing ? "Sending…" : "Send Invite"}
           </button>
         </div>
       </div>

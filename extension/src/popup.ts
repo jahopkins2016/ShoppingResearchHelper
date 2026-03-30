@@ -47,6 +47,10 @@ function showStatus(message: string, type: 'success' | 'error') {
   el.className = `status-message ${type}`;
 }
 
+function openWebsite() {
+  chrome.tabs.create({ url: 'https://web-weld-two-36.vercel.app/' });
+}
+
 // ── Metadata extraction (runs in page context) ──────────────
 
 async function extractPageMetadata(tabId: number): Promise<Metadata> {
@@ -165,6 +169,7 @@ function renderLogin() {
   app.innerHTML = `
     <div class="header">
       <h1 class="logo">SaveIt</h1>
+      <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
     </div>
     <div class="login-form">
       <h2>Sign in</h2>
@@ -175,6 +180,7 @@ function renderLogin() {
     </div>
   `;
 
+  document.getElementById('website-btn')!.addEventListener('click', openWebsite);
   document.getElementById('login-btn')!.addEventListener('click', handleLogin);
   document.getElementById('password')!.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleLogin();
@@ -222,10 +228,16 @@ async function loadSaveUI() {
   app.innerHTML = `
     <div class="header">
       <h1 class="logo">SaveIt</h1>
-      <button id="signout-btn" class="btn-link">Sign out</button>
+      <div class="header-actions">
+        <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
+        <button id="signout-btn" class="btn-link">Sign out</button>
+      </div>
     </div>
     <div class="loading"><div class="spinner"></div><p>Loading\u2026</p></div>
   `;
+  document
+    .getElementById('website-btn')!
+    .addEventListener('click', openWebsite);
   document
     .getElementById('signout-btn')!
     .addEventListener('click', handleSignOut);
@@ -263,7 +275,10 @@ function renderSaveForm() {
   app.innerHTML = `
     <div class="header">
       <h1 class="logo">SaveIt</h1>
-      <button id="signout-btn" class="btn-link">Sign out</button>
+      <div class="header-actions">
+        <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
+        <button id="signout-btn" class="btn-link">Sign out</button>
+      </div>
     </div>
 
     <div class="page-preview">
@@ -301,6 +316,9 @@ function renderSaveForm() {
   document
     .getElementById('signout-btn')!
     .addEventListener('click', handleSignOut);
+  document
+    .getElementById('website-btn')!
+    .addEventListener('click', openWebsite);
   document
     .getElementById('new-collection-btn')!
     .addEventListener('click', showNewCollectionForm);

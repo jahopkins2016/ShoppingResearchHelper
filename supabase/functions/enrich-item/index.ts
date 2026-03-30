@@ -250,6 +250,56 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
+    // Cache image to Supabase Storage
+    if (image_url) {
+      try {
+        const imgResp = await fetch(image_url, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            Accept: "image/*",
+          },
+          redirect: "follow",
+        });
+
+        if (imgResp.ok) {
+          const contentType = imgResp.headers.get("content-type") || "image/jpeg";
+          const extMap: Record<string, string> = {
+            "image/png": "png",
+            "image/jpeg": "jpg",
+            "image/webp": "webp",
+            "image/gif": "gif",
+          };
+          const ext = extMap[contentType.split(";")[0].trim()] || "jpg";
+          const storagePath = `${itemId}.${ext}`;
+
+          const imgBytes = new Uint8Array(await imgResp.arrayBuffer());
+
+          const { error: uploadError } = await supabase.storage
+            .from("item-images")
+            .upload(storagePath, imgBytes, {
+              contentType: contentType.split(";")[0].trim(),
+              upsert: true,
+            });
+
+          if (!uploadError) {
+            const { data: publicUrlData } = supabase.storage
+              .from("item-images")
+              .getPublicUrl(storagePath);
+
+            if (publicUrlData?.publicUrl) {
+              update.cached_image_path = publicUrlData.publicUrl;
+            }
+          } else {
+            console.error("Image upload failed:", uploadError.message);
+          }
+        }
+      } catch (imgErr: any) {
+        console.error("Image caching failed:", imgErr.message);
+        // Non-fatal — enrichment continues without cached image
+      }
+    }
+
     // Check if we should update lowest_price
     if (price) {
       if (!item.lowest_price || price < item.lowest_price) {

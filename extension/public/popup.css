@@ -120,6 +120,20 @@ body {
   color: var(--color-danger);
 }
 
+.btn-website {
+  font-weight: 500;
+  color: var(--color-primary-container);
+}
+.btn-website:hover {
+  color: var(--color-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .btn-save {
   margin: 16px 24px 20px;
   width: calc(100% - 48px);

@@ -11,6 +11,7 @@ import {
   Modal,
   Pressable,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
@@ -25,6 +26,7 @@ type Item = {
   title: string | null;
   description: string | null;
   image_url: string | null;
+  cached_image_path: string | null;
   price: string | null;
   currency: string | null;
   site_name: string | null;
@@ -54,6 +56,10 @@ export default function CollectionItemsScreen() {
   const [priceHistory, setPriceHistory] = useState<PriceHistoryRow[]>([]);
   const [priceSheetItemId, setPriceSheetItemId] = useState<string | null>(null);
   const [priceSheetLoading, setPriceSheetLoading] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addUrl, setAddUrl] = useState('');
+  const [addSaving, setAddSaving] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -102,6 +108,44 @@ export default function CollectionItemsScreen() {
     }
   }
 
+  async function handleAddItem() {
+    const trimmed = addUrl.trim();
+    if (!trimmed) return;
+
+    setAddSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('items')
+        .insert({
+          url: trimmed,
+          collection_id: id,
+          user_id: user.id,
+          enrichment_status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        Alert.alert('Error', error?.message || 'Failed to save item');
+        return;
+      }
+
+      setItems((prev) => [data as Item, ...prev]);
+
+      supabase.functions.invoke('enrich-item', {
+        body: { item_id: data.id },
+      });
+
+      setAddUrl('');
+      setShowAddModal(false);
+    } finally {
+      setAddSaving(false);
+    }
+  }
+
   const openPriceSheet = useCallback(async (itemId: string) => {
     setPriceSheetItemId(itemId);
     setPriceSheetVisible(true);
@@ -147,8 +191,8 @@ export default function CollectionItemsScreen() {
     return (
       <TouchableOpacity style={styles.card} activeOpacity={0.95}>
         <View style={styles.cardRow}>
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.cardImage} />
+          {(item.cached_image_path || item.image_url) ? (
+            <Image source={{ uri: (item.cached_image_path || item.image_url)! }} style={styles.cardImage} />
           ) : (
             <View style={[styles.cardImage, styles.cardImagePlaceholder]} />
           )}
@@ -219,7 +263,7 @@ export default function CollectionItemsScreen() {
             </View>
             <Text style={styles.emptyTitle}>No items yet</Text>
             <Text style={styles.emptySubtext}>
-              Save items from the browser extension or share sheet.
+              Tap + below to paste a URL, or use the browser extension.
             </Text>
           </View>
         }
@@ -268,6 +312,60 @@ export default function CollectionItemsScreen() {
             >
               <Text style={styles.dismissText}>Dismiss</Text>
             </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowAddModal(true)}
+        activeOpacity={0.9}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <Pressable style={styles.overlay} onPress={() => setShowAddModal(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Add Item</Text>
+            <TextInput
+              style={styles.addInput}
+              placeholder="https://example.com/product"
+              placeholderTextColor="#737686"
+              value={addUrl}
+              onChangeText={setAddUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              autoFocus
+            />
+            <View style={styles.addActions}>
+              <TouchableOpacity
+                style={styles.addCancelBtn}
+                onPress={() => {
+                  setShowAddModal(false);
+                  setAddUrl('');
+                }}
+              >
+                <Text style={styles.addCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addSaveBtn, (!addUrl.trim() || addSaving) && styles.addSaveBtnDisabled]}
+                onPress={handleAddItem}
+                disabled={!addUrl.trim() || addSaving}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.addSaveText}>
+                  {addSaving ? 'Saving…' : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Pressable>
         </Pressable>
       </Modal>
@@ -460,4 +558,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dismissText: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
+
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563eb',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#004ac6',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fabText: { color: '#fff', fontSize: 28, lineHeight: 30 },
+
+  addInput: {
+    backgroundColor: '#f3f4f5',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#191c1d',
+    marginBottom: 16,
+  },
+  addActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  addCancelBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    backgroundColor: '#e7e8e9',
+  },
+  addCancelText: { fontSize: 14, fontWeight: '600', color: '#434655' },
+  addSaveBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    backgroundColor: '#2563eb',
+  },
+  addSaveBtnDisabled: { opacity: 0.5 },
+  addSaveText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
 });

@@ -19,7 +19,7 @@ export default async function CollectionsPage() {
   if (collections && collections.length > 0) {
     const { data: coverItems } = await supabase
       .from("items")
-      .select("collection_id, image_url")
+      .select("collection_id, image_url, cached_image_path")
       .in("collection_id", collections.map((c: any) => c.id))
       .not("image_url", "is", null)
       .order("sort_order", { ascending: true });
@@ -27,8 +27,8 @@ export default async function CollectionsPage() {
     if (coverItems) {
       for (const item of coverItems) {
         // Keep only the first image per collection
-        if (!coverMap[item.collection_id] && item.image_url) {
-          coverMap[item.collection_id] = item.image_url;
+        if (!coverMap[item.collection_id] && (item.cached_image_path || item.image_url)) {
+          coverMap[item.collection_id] = item.cached_image_path || item.image_url;
         }
       }
     }
