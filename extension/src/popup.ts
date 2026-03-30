@@ -436,15 +436,15 @@ async function init() {
   `;
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     renderLogin();
     return;
   }
 
-  currentUser = { id: user.id };
+  currentUser = { id: session.user.id };
   await loadSaveUI();
 }
 
