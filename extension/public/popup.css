@@ -61,6 +61,35 @@ body {
   letter-spacing: -0.5px;
 }
 
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-container));
+  color: #fff;
+  font-family: var(--font-headline);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.version-badge {
+  text-align: center;
+  padding: 8px 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
 /* Buttons */
 .btn-primary {
   display: block;
