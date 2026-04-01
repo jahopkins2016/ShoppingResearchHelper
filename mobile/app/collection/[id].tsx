@@ -12,13 +12,15 @@ import {
   Pressable,
   Dimensions,
   TextInput,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PADDING = 24;
-const IMAGE_SIZE = 80;
+const IMAGE_WIDTH = SCREEN_WIDTH - PADDING * 2 - 24; // card padding
+const IMAGE_HEIGHT = 180;
 
 type Item = {
   id: string;
@@ -34,7 +36,9 @@ type Item = {
   enrichment_status: string;
   price_drop_seen: boolean;
   lowest_price: string | null;
+  last_viewed_at: string | null;
   created_at: string;
+  price_history: PriceHistoryRow[];
 };
 
 type PriceHistoryRow = {
@@ -81,7 +85,7 @@ export default function CollectionItemsScreen() {
     setLoading(true);
     const { data, error } = await supabase
       .from('items')
-      .select('*')
+      .select('*, price_history(id, price, currency, checked_at)')
       .eq('collection_id', id)
       .eq('is_archived', false)
       .order('created_at', { ascending: false });
@@ -89,7 +93,13 @@ export default function CollectionItemsScreen() {
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-      const fetched = data ?? [];
+      const fetched = (data ?? []).map((d: any) => ({
+        ...d,
+        price_history: (d.price_history ?? []).sort(
+          (a: PriceHistoryRow, b: PriceHistoryRow) =>
+            new Date(b.checked_at).getTime() - new Date(a.checked_at).getTime()
+        ),
+      })) as Item[];
       setItems(fetched);
       retryStaleEnrichments(fetched);
     }
@@ -187,44 +197,127 @@ export default function CollectionItemsScreen() {
     });
   }
 
+  function handleItemPress(item: Item) {
+    Linking.openURL(item.url);
+
+    // Optimistically update last_viewed_at
+    const now = new Date().toISOString();
+    setItems((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, last_viewed_at: now } : i))
+    );
+
+    // Fire-and-forget: record view + re-enrich
+    supabase
+      .from('items')
+      .update({ last_viewed_at: now })
+      .eq('id', item.id)
+      .then(() => {});
+    supabase.functions.invoke('enrich-item', { body: { item_id: item.id } });
+  }
+
   function renderItem({ item }: { item: Item }) {
+    const historySlice = item.price_history.slice(0, 3);
+    const imageUri = item.cached_image_path || item.image_url;
+
     return (
-      <TouchableOpacity style={styles.card} activeOpacity={0.95}>
-        <View style={styles.cardRow}>
-          {(item.cached_image_path || item.image_url) ? (
-            <Image source={{ uri: (item.cached_image_path || item.image_url)! }} style={styles.cardImage} />
-          ) : (
-            <View style={[styles.cardImage, styles.cardImagePlaceholder]} />
-          )}
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle} numberOfLines={2}>
-              {item.title || item.url}
-            </Text>
-            <View style={styles.siteRow}>
-              {item.site_favicon_url ? (
-                <Image source={{ uri: item.site_favicon_url }} style={styles.favicon} />
-              ) : null}
-              <Text style={styles.siteName} numberOfLines={1}>
-                {item.site_name || new URL(item.url).hostname}
-              </Text>
-            </View>
-            {item.price_drop_seen === false && (
-              <TouchableOpacity
-                style={styles.priceDropBadge}
-                onPress={() => openPriceSheet(item.id)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.priceDropText}>↓ Price Drop</Text>
-              </TouchableOpacity>
-            )}
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.85}
+        onPress={() => handleItemPress(item)}
+      >
+        {/* Full-width image */}
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.cardImageFull} />
+        ) : (
+          <View style={[styles.cardImageFull, styles.cardImagePlaceholder]}>
+            <Text style={styles.placeholderIcon}>🖼</Text>
           </View>
+        )}
+
+        <View style={styles.cardBody}>
+          {/* Title */}
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {item.title || item.url}
+          </Text>
+
+          {/* Site row */}
+          <View style={styles.siteRow}>
+            {item.site_favicon_url ? (
+              <Image source={{ uri: item.site_favicon_url }} style={styles.favicon} />
+            ) : null}
+            <Text style={styles.siteName} numberOfLines={1}>
+              {item.site_name || new URL(item.url).hostname}
+            </Text>
+          </View>
+
+          {/* Description */}
+          {item.description ? (
+            <Text style={styles.descriptionText} numberOfLines={1}>
+              {item.description}
+            </Text>
+          ) : null}
+
+          {/* Price row */}
           {item.price ? (
-            <View style={styles.priceContainer}>
+            <View style={styles.priceRow}>
               <Text style={styles.priceText}>
-                {item.currency ? `${item.currency} ` : ''}
-                {item.price}
+                {item.currency ? `${item.currency} ` : ''}{item.price}
               </Text>
+              {item.lowest_price && item.lowest_price !== item.price ? (
+                <Text style={styles.lowestPriceText}>
+                  Low: {item.currency ? `${item.currency} ` : ''}{item.lowest_price}
+                </Text>
+              ) : null}
             </View>
+          ) : null}
+
+          {/* Price drop badge */}
+          {item.price_drop_seen === false && (
+            <TouchableOpacity
+              style={styles.priceDropBadge}
+              onPress={(e) => {
+                e.stopPropagation();
+                openPriceSheet(item.id);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.priceDropText}>↓ Price Drop</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Mini price history */}
+          {historySlice.length > 0 && (
+            <View style={styles.miniHistory}>
+              <Text style={styles.miniHistoryLabel}>Price History</Text>
+              {historySlice.map((row) => (
+                <View key={row.id} style={styles.miniHistoryRow}>
+                  <Text style={styles.miniHistoryPrice}>
+                    {row.currency ? `${row.currency} ` : ''}{row.price ?? '—'}
+                  </Text>
+                  <Text style={styles.miniHistoryDate}>
+                    {formatDate(row.checked_at)}
+                  </Text>
+                </View>
+              ))}
+              {item.price_history.length > 3 && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    openPriceSheet(item.id);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.miniHistoryMore}>
+                    +{item.price_history.length - 3} more
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Last viewed */}
+          {item.last_viewed_at ? (
+            <Text style={styles.lastViewed}>Viewed {formatDate(item.last_viewed_at)}</Text>
           ) : null}
         </View>
       </TouchableOpacity>
@@ -414,25 +507,26 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    marginBottom: 12,
-    padding: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  cardRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  cardImage: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
-    borderRadius: 12,
+  cardImageFull: {
+    width: '100%',
+    height: IMAGE_HEIGHT,
     backgroundColor: '#edeeef',
   },
-  cardImagePlaceholder: { backgroundColor: '#e7e8e9' },
-  cardContent: {
-    flex: 1,
-    marginLeft: 12,
+  cardImagePlaceholder: {
+    backgroundColor: '#e7e8e9',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderIcon: { fontSize: 32, opacity: 0.4 },
+  cardBody: {
+    padding: 12,
   },
   cardTitle: {
     fontSize: 15,
@@ -448,6 +542,30 @@ const styles = StyleSheet.create({
   favicon: { width: 14, height: 14, borderRadius: 3, marginRight: 5 },
   siteName: { fontSize: 12, color: '#434655', fontWeight: '500' },
 
+  descriptionText: {
+    fontSize: 12,
+    color: '#737686',
+    marginTop: 6,
+    lineHeight: 16,
+  },
+
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginTop: 8,
+    gap: 8,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#191c1d',
+  },
+  lowestPriceText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#737686',
+  },
+
   priceDropBadge: {
     alignSelf: 'flex-start',
     backgroundColor: '#dcfce7',
@@ -458,15 +576,47 @@ const styles = StyleSheet.create({
   },
   priceDropText: { fontSize: 11, fontWeight: '700', color: '#16a34a' },
 
-  priceContainer: {
-    marginLeft: 8,
-    alignSelf: 'flex-start',
-    paddingTop: 2,
+  miniHistory: {
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#e7e8e9',
   },
-  priceText: {
-    fontSize: 15,
-    fontWeight: '800',
+  miniHistoryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#737686',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  miniHistoryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 3,
+  },
+  miniHistoryPrice: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#191c1d',
+  },
+  miniHistoryDate: {
+    fontSize: 11,
+    color: '#737686',
+  },
+  miniHistoryMore: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2563eb',
+    marginTop: 4,
+  },
+
+  lastViewed: {
+    fontSize: 11,
+    color: '#737686',
+    fontStyle: 'italic',
+    marginTop: 8,
   },
 
   empty: {

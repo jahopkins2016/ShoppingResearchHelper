@@ -158,6 +158,101 @@
   font-style: italic;
 }
 
+/* Image placeholder (when no image) */
+.imagePlaceholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--color-surface-container);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholderIcon {
+  font-size: 32px;
+  opacity: 0.35;
+}
+
+/* Item description */
+.itemDescription {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* Lowest price */
+.lowestPrice {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+/* Price history section */
+.priceHistory {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-surface-container);
+}
+
+.priceHistoryLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.priceHistoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.priceHistoryPrice {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.priceHistoryDate {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.priceHistoryToggle {
+  background: none;
+  border: none;
+  padding: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary-container);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.priceHistoryToggle:hover {
+  opacity: 0.7;
+}
+
+/* Last viewed */
+.lastViewed {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: 8px;
+}
+
 /* Add Item button */
 .addButtonWrap {
   display: flex;

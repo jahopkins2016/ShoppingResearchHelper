@@ -16,7 +16,7 @@ interface Collection {
   is_default: boolean;
 }
 
-const EXTENSION_VERSION = '1.1.0';
+const EXTENSION_VERSION = '1.2.0';
 
 const app = document.getElementById('app')!;
 

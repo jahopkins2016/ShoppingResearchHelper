@@ -24,7 +24,7 @@ export default async function CollectionDetailPage({
 
   const { data: items } = await supabase
     .from("items")
-    .select("*")
+    .select("*, price_history(id, price, currency, checked_at)")
     .eq("collection_id", id)
     .order("sort_order", { ascending: true });
 

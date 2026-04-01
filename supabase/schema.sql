@@ -221,3 +221,8 @@ create policy "Users can insert referrals"
 create policy "Service role can update referrals"
   on public.referrals for update
   using (true);
+
+-- ============================================================
+-- SCHEMA ADDITIONS
+-- ============================================================
+alter table public.items add column if not exists last_viewed_at timestamptz;

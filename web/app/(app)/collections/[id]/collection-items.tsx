@@ -4,10 +4,18 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
+interface PriceHistoryRow {
+  id: string;
+  price: string | null;
+  currency: string | null;
+  checked_at: string;
+}
+
 interface Item {
   id: string;
   url: string;
   title: string | null;
+  description: string | null;
   image_url: string | null;
   cached_image_path: string | null;
   price: string | null;
@@ -16,6 +24,9 @@ interface Item {
   notes: string | null;
   price_drop_seen: boolean | null;
   enrichment_status: string;
+  lowest_price: string | null;
+  last_viewed_at: string | null;
+  price_history: PriceHistoryRow[];
   [key: string]: unknown;
 }
 
@@ -27,6 +38,9 @@ export default function CollectionItems({
   collectionId: string;
 }) {
   const [items, setItems] = useState<Item[]>(initialItems);
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(
+    new Set()
+  );
   const [showModal, setShowModal] = useState(false);
   const [url, setUrl] = useState("");
   const [saving, setSaving] = useState(false);
@@ -135,6 +149,40 @@ export default function CollectionItems({
     );
   }
 
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  function handleCardClick(item: Item) {
+    const now = new Date().toISOString();
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, last_viewed_at: now } : i
+      )
+    );
+    supabase
+      .from("items")
+      .update({ last_viewed_at: now })
+      .eq("id", item.id)
+      .then(() => {});
+    supabase.functions.invoke("enrich-item", { body: { item_id: item.id } });
+  }
+
+  function toggleHistory(e: React.MouseEvent, itemId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedHistory((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  }
+
   if (!items || items.length === 0) {
     return (
       <>
@@ -207,51 +255,116 @@ export default function CollectionItems({
         </button>
       </div>
       <div className={styles.grid}>
-        {items.map((item) => (
-          <a
-            key={item.id}
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            {(item.cached_image_path || item.image_url) && (
-              <div className={styles.imageWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={(item.cached_image_path || item.image_url)!}
-                  alt={item.title ?? ""}
-                  className={styles.image}
-                />
-                {item.price && (
-                  <span className={styles.price}>
-                    {item.currency ?? "$"}
-                    {item.price}
-                  </span>
-                )}
-                {item.price_drop_seen === false && (
-                  <button
-                    className={styles.priceDrop}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      dismissPriceDrop(item.id);
-                    }}
-                  >
-                    ↓ Price Drop
-                  </button>
-                )}
-              </div>
-            )}
-            <div className={styles.cardBody}>
-              <h2 className={styles.cardTitle}>{item.title ?? item.url}</h2>
-              {item.site_name && (
-                <p className={styles.siteName}>{item.site_name}</p>
+        {items.map((item) => {
+          const history = [...(item.price_history ?? [])].sort(
+            (a, b) =>
+              new Date(b.checked_at).getTime() -
+              new Date(a.checked_at).getTime()
+          );
+          const isExpanded = expandedHistory.has(item.id);
+          const visibleHistory = isExpanded ? history : history.slice(0, 3);
+
+          return (
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.card}
+              onClick={() => handleCardClick(item)}
+            >
+              {(item.cached_image_path || item.image_url) ? (
+                <div className={styles.imageWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={(item.cached_image_path || item.image_url)!}
+                    alt={item.title ?? ""}
+                    className={styles.image}
+                  />
+                  {item.price && (
+                    <span className={styles.price}>
+                      {item.currency ?? "$"}
+                      {item.price}
+                    </span>
+                  )}
+                  {item.price_drop_seen === false && (
+                    <button
+                      className={styles.priceDrop}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dismissPriceDrop(item.id);
+                      }}
+                    >
+                      ↓ Price Drop
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.imagePlaceholder}>
+                  <span className={styles.placeholderIcon}>🖼</span>
+                  {item.price && (
+                    <span className={styles.price}>
+                      {item.currency ?? "$"}
+                      {item.price}
+                    </span>
+                  )}
+                </div>
               )}
-              {item.notes && <p className={styles.notes}>{item.notes}</p>}
-            </div>
-          </a>
-        ))}
+              <div className={styles.cardBody}>
+                <h2 className={styles.cardTitle}>{item.title ?? item.url}</h2>
+                {item.site_name && (
+                  <p className={styles.siteName}>{item.site_name}</p>
+                )}
+                {item.description && (
+                  <p className={styles.itemDescription}>{item.description}</p>
+                )}
+                {item.lowest_price &&
+                  item.lowest_price !== item.price &&
+                  item.price && (
+                    <p className={styles.lowestPrice}>
+                      Lowest: {item.currency ?? "$"}
+                      {item.lowest_price}
+                    </p>
+                  )}
+                {visibleHistory.length > 0 && (
+                  <div className={styles.priceHistory}>
+                    <span className={styles.priceHistoryLabel}>
+                      Price History
+                    </span>
+                    {visibleHistory.map((row) => (
+                      <div key={row.id} className={styles.priceHistoryRow}>
+                        <span className={styles.priceHistoryPrice}>
+                          {row.currency ?? "$"}
+                          {row.price ?? "\u2014"}
+                        </span>
+                        <span className={styles.priceHistoryDate}>
+                          {formatDate(row.checked_at)}
+                        </span>
+                      </div>
+                    ))}
+                    {history.length > 3 && (
+                      <button
+                        className={styles.priceHistoryToggle}
+                        onClick={(e) => toggleHistory(e, item.id)}
+                      >
+                        {isExpanded
+                          ? "\u25B2 Show less"
+                          : `\u25BC Show ${history.length - 3} more`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {item.last_viewed_at && (
+                  <p className={styles.lastViewed}>
+                    Viewed {formatDate(item.last_viewed_at)}
+                  </p>
+                )}
+                {item.notes && <p className={styles.notes}>{item.notes}</p>}
+              </div>
+            </a>
+          );
+        })}
       </div>
       {showModal && (
         <Modal
