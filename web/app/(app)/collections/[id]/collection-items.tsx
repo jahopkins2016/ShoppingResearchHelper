@@ -26,6 +26,20 @@ interface Item {
   enrichment_status: string;
   lowest_price: string | null;
   last_viewed_at: string | null;
+  brand: string | null;
+  category: string | null;
+  availability: string | null;
+  condition: string | null;
+  rating: number | null;
+  rating_count: number | null;
+  review_count: number | null;
+  seller: string | null;
+  sale_price: string | null;
+  original_price: string | null;
+  color: string | null;
+  size: string | null;
+  shipping: string | null;
+  return_policy: string | null;
   price_history: PriceHistoryRow[];
   [key: string]: unknown;
 }
@@ -157,6 +171,33 @@ export default function CollectionItems({
     });
   }
 
+  function renderStars(rating: number): string {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.25 ? 1 : 0;
+    const empty = 5 - full - half;
+    return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
+  }
+
+  function formatCurrency(currency: string | null): string {
+    if (!currency) return "$";
+    const symbols: Record<string, string> = { USD: "$", GBP: "£", EUR: "€", CAD: "CA$", AUD: "A$" };
+    return symbols[currency] || currency + " ";
+  }
+
+  function availabilityLabel(avail: string): { text: string; inStock: boolean } {
+    const lower = avail.toLowerCase();
+    if (lower.includes("instock") || lower.includes("in_stock") || lower.includes("in stock")) {
+      return { text: "In Stock", inStock: true };
+    }
+    if (lower.includes("outofstock") || lower.includes("out_of_stock") || lower.includes("out of stock")) {
+      return { text: "Out of Stock", inStock: false };
+    }
+    if (lower.includes("preorder") || lower.includes("pre_order")) {
+      return { text: "Pre-Order", inStock: true };
+    }
+    return { text: avail, inStock: true };
+  }
+
   function handleCardClick(item: Item) {
     const now = new Date().toISOString();
     setItems((prev) =>
@@ -262,7 +303,11 @@ export default function CollectionItems({
               new Date(a.checked_at).getTime()
           );
           const isExpanded = expandedHistory.has(item.id);
-          const visibleHistory = isExpanded ? history : history.slice(0, 3);
+          const visibleHistory = isExpanded ? history : history.slice(0, 2);
+          const sym = formatCurrency(item.currency);
+          const hasSale = item.sale_price && item.original_price;
+          const displayPrice = hasSale ? item.sale_price : item.price;
+          const avail = item.availability ? availabilityLabel(item.availability) : null;
 
           return (
             <a
@@ -281,10 +326,9 @@ export default function CollectionItems({
                     alt={item.title ?? ""}
                     className={styles.image}
                   />
-                  {item.price && (
-                    <span className={styles.price}>
-                      {item.currency ?? "$"}
-                      {item.price}
+                  {avail && (
+                    <span className={`${styles.availabilityBadge} ${avail.inStock ? styles.inStock : styles.outOfStock}`}>
+                      {avail.text}
                     </span>
                   )}
                   {item.price_drop_seen === false && (
@@ -296,37 +340,65 @@ export default function CollectionItems({
                         dismissPriceDrop(item.id);
                       }}
                     >
-                      ↓ Price Drop
+                      ↓ Drop
                     </button>
                   )}
                 </div>
               ) : (
                 <div className={styles.imagePlaceholder}>
                   <span className={styles.placeholderIcon}>🖼</span>
-                  {item.price && (
-                    <span className={styles.price}>
-                      {item.currency ?? "$"}
-                      {item.price}
-                    </span>
-                  )}
                 </div>
               )}
               <div className={styles.cardBody}>
                 <h2 className={styles.cardTitle}>{item.title ?? item.url}</h2>
-                {item.site_name && (
-                  <p className={styles.siteName}>{item.site_name}</p>
+
+                {(item.brand || item.site_name) && (
+                  <div className={styles.cardMeta}>
+                    {item.brand && <span className={styles.brand}>{item.brand}</span>}
+                    {item.brand && item.site_name && <span className={styles.metaDot}>·</span>}
+                    {item.site_name && <span className={styles.siteName}>{item.site_name}</span>}
+                  </div>
                 )}
-                {item.description && (
-                  <p className={styles.itemDescription}>{item.description}</p>
+
+                {displayPrice && (
+                  <div className={styles.priceRow}>
+                    <span className={`${styles.currentPrice} ${hasSale ? styles.salePrice : ""}`}>
+                      {sym}{displayPrice}
+                    </span>
+                    {hasSale && (
+                      <span className={styles.originalPrice}>
+                        {sym}{item.original_price}
+                      </span>
+                    )}
+                    {item.lowest_price && item.lowest_price !== displayPrice && (
+                      <span className={styles.lowestBadge}>Low: {sym}{item.lowest_price}</span>
+                    )}
+                  </div>
                 )}
-                {item.lowest_price &&
-                  item.lowest_price !== item.price &&
-                  item.price && (
-                    <p className={styles.lowestPrice}>
-                      Lowest: {item.currency ?? "$"}
-                      {item.lowest_price}
-                    </p>
-                  )}
+
+                {item.rating != null && (
+                  <div className={styles.ratingRow}>
+                    <span className={styles.stars}>{renderStars(item.rating)}</span>
+                    <span className={styles.ratingText}>{item.rating}</span>
+                    {(item.rating_count || item.review_count) && (
+                      <span className={styles.ratingCount}>
+                        ({item.review_count ?? item.rating_count})
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {(item.condition || item.color || item.size || item.shipping) && (
+                  <div className={styles.tagsRow}>
+                    {item.condition && item.condition !== "NewCondition" && (
+                      <span className={styles.tag}>{item.condition.replace("Condition", "")}</span>
+                    )}
+                    {item.color && <span className={styles.tag}>{item.color}</span>}
+                    {item.size && <span className={styles.tag}>{item.size}</span>}
+                    {item.shipping && <span className={styles.tag}>{item.shipping}</span>}
+                  </div>
+                )}
+
                 {visibleHistory.length > 0 && (
                   <div className={styles.priceHistory}>
                     <span className={styles.priceHistoryLabel}>
@@ -343,23 +415,19 @@ export default function CollectionItems({
                         </span>
                       </div>
                     ))}
-                    {history.length > 3 && (
+                    {history.length > 2 && (
                       <button
                         className={styles.priceHistoryToggle}
                         onClick={(e) => toggleHistory(e, item.id)}
                       >
                         {isExpanded
-                          ? "\u25B2 Show less"
-                          : `\u25BC Show ${history.length - 3} more`}
+                          ? "\u25B2 Less"
+                          : `\u25BC +${history.length - 2}`}
                       </button>
                     )}
                   </div>
                 )}
-                {item.last_viewed_at && (
-                  <p className={styles.lastViewed}>
-                    Viewed {formatDate(item.last_viewed_at)}
-                  </p>
-                )}
+
                 {item.notes && <p className={styles.notes}>{item.notes}</p>}
               </div>
             </a>

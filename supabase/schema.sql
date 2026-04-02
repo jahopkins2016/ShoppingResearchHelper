@@ -226,3 +226,53 @@ create policy "Service role can update referrals"
 -- SCHEMA ADDITIONS
 -- ============================================================
 alter table public.items add column if not exists last_viewed_at timestamptz;
+
+-- Rich product metadata (extracted from JSON-LD, OG tags, page heuristics)
+alter table public.items add column if not exists brand text;
+alter table public.items add column if not exists category text;
+alter table public.items add column if not exists availability text;        -- InStock, OutOfStock, PreOrder, etc.
+alter table public.items add column if not exists condition text;           -- new, used, refurbished
+alter table public.items add column if not exists rating numeric(3,2);     -- e.g. 4.50
+alter table public.items add column if not exists rating_count integer;
+alter table public.items add column if not exists review_count integer;
+alter table public.items add column if not exists seller text;
+alter table public.items add column if not exists sku text;
+alter table public.items add column if not exists gtin text;               -- UPC / EAN / ISBN
+alter table public.items add column if not exists sale_price text;
+alter table public.items add column if not exists original_price text;     -- regular price when on sale
+alter table public.items add column if not exists additional_images text[];
+alter table public.items add column if not exists color text;
+alter table public.items add column if not exists size text;
+alter table public.items add column if not exists shipping text;
+alter table public.items add column if not exists return_policy text;
+alter table public.items add column if not exists product_metadata jsonb default '{}'::jsonb;  -- overflow for extras
+
+-- Similar products table
+create table if not exists public.similar_products (
+  id uuid primary key default gen_random_uuid(),
+  item_id uuid not null references public.items(id) on delete cascade,
+  title text not null,
+  url text not null,
+  image_url text,
+  price text,
+  currency text,
+  site_name text,
+  similarity_source text,    -- 'json_ld', 'same_site', 'search', 'gtin_match'
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_similar_products_item
+  on public.similar_products (item_id);
+
+-- RLS for similar_products
+alter table public.similar_products enable row level security;
+
+create policy "Users can view similar products for their items"
+  on public.similar_products for select
+  using (
+    item_id in (select id from public.items where user_id = auth.uid())
+  );
+
+create policy "Service role can manage similar products"
+  on public.similar_products for all
+  using (true);

@@ -1,147 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { extractMetadata } from "../_shared/metadata-extractor.ts";
+import { findSimilarProducts } from "../_shared/similar-products.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-// ── Regex-based metadata extraction (ported from extension popup.ts) ──
-
-function getMetaContent(html: string, attr: string, value: string): string {
-  // Match both single and double quotes, handle whitespace variations
-  const pattern = new RegExp(
-    `<meta[^>]+${attr}=["']${value}["'][^>]+content=["']([^"']*)["']` +
-    `|<meta[^>]+content=["']([^"']*)["'][^>]+${attr}=["']${value}["']`,
-    "i"
-  );
-  const match = html.match(pattern);
-  return match ? (match[1] ?? match[2] ?? "") : "";
-}
-
-function extractTitle(html: string): string {
-  return (
-    getMetaContent(html, "property", "og:title") ||
-    getMetaContent(html, "name", "title") ||
-    (() => {
-      const m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-      return m ? m[1].trim() : "";
-    })()
-  );
-}
-
-function extractDescription(html: string): string {
-  return (
-    getMetaContent(html, "property", "og:description") ||
-    getMetaContent(html, "name", "description")
-  );
-}
-
-function extractImageUrl(html: string): string {
-  return getMetaContent(html, "property", "og:image");
-}
-
-function extractSiteName(html: string, url: string): string {
-  const og = getMetaContent(html, "property", "og:site_name");
-  if (og) return og;
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "";
-  }
-}
-
-function extractFaviconUrl(html: string, url: string): string {
-  // Match <link rel="icon" href="..."> or <link rel="shortcut icon" href="...">
-  const pattern =
-    /<link[^>]+rel=["'](?:shortcut\s+)?icon["'][^>]+href=["']([^"']*)["']/i;
-  const altPattern =
-    /<link[^>]+href=["']([^"']*)["'][^>]+rel=["'](?:shortcut\s+)?icon["']/i;
-  const match = html.match(pattern) || html.match(altPattern);
-
-  if (match && match[1]) {
-    const href = match[1];
-    // Resolve relative URLs
-    if (href.startsWith("http")) return href;
-    try {
-      return new URL(href, url).toString();
-    } catch {
-      return href;
-    }
-  }
-
-  try {
-    const origin = new URL(url).origin;
-    return `${origin}/favicon.ico`;
-  } catch {
-    return "";
-  }
-}
-
-interface PriceInfo {
-  price: string;
-  currency: string;
-}
-
-function extractPriceFromJsonLd(html: string): PriceInfo {
-  const scriptPattern =
-    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let match;
-
-  while ((match = scriptPattern.exec(html)) !== null) {
-    try {
-      const raw = JSON.parse(match[1]);
-      const nodes = Array.isArray(raw) ? raw : [raw];
-
-      const result = findProduct(nodes);
-      if (result) return result;
-    } catch {
-      // skip invalid JSON-LD
-    }
-  }
-
-  return { price: "", currency: "" };
-}
-
-function findProduct(items: any[]): PriceInfo | null {
-  for (const item of items) {
-    if (item["@type"] === "Product" && item.offers) {
-      const offers = Array.isArray(item.offers)
-        ? item.offers
-        : [item.offers];
-      for (const offer of offers) {
-        if (offer.price || offer.lowPrice) {
-          return {
-            price: String(offer.price ?? offer.lowPrice ?? ""),
-            currency: offer.priceCurrency || "",
-          };
-        }
-      }
-    }
-    if (item["@graph"] && Array.isArray(item["@graph"])) {
-      const result = findProduct(item["@graph"]);
-      if (result) return result;
-    }
-  }
-  return null;
-}
-
-function extractPrice(html: string): PriceInfo {
-  // 1. Try JSON-LD
-  const jsonLd = extractPriceFromJsonLd(html);
-  if (jsonLd.price) return jsonLd;
-
-  // 2. Fallback to meta tags
-  const price =
-    getMetaContent(html, "property", "product:price:amount") ||
-    getMetaContent(html, "property", "og:price:amount");
-
-  const currency =
-    jsonLd.currency ||
-    getMetaContent(html, "property", "product:price:currency") ||
-    getMetaContent(html, "property", "og:price:currency");
-
-  return { price, currency };
-}
 
 // ── Main handler ──
 
@@ -217,7 +81,6 @@ Deno.serve(async (req) => {
       });
       html = await resp.text();
     } catch (e: any) {
-      // Fetch failed — mark enrichment as failed
       await supabase
         .from("items")
         .update({ enrichment_status: "failed", updated_at: new Date().toISOString() })
@@ -229,31 +92,56 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract metadata
-    const title = extractTitle(html);
-    const description = extractDescription(html);
-    const image_url = extractImageUrl(html);
-    const site_name = extractSiteName(html, item.url);
-    const site_favicon_url = extractFaviconUrl(html, item.url);
-    const { price, currency } = extractPrice(html);
+    // ── Extract rich metadata ──
+    const { metadata, similar_products: jsonLdSimilar } = extractMetadata(html, item.url);
 
-    // Build update payload
+    // ── Find similar products (parallel: same-site + Google Shopping) ──
+    const similarProducts = await findSimilarProducts({
+      title: metadata.title,
+      brand: metadata.brand,
+      gtin: metadata.gtin,
+      sourceUrl: item.url,
+      jsonLdSimilar,
+      limit: 10,
+    });
+
+    // Build update payload with all extracted fields
     const update: Record<string, any> = {
-      title,
-      description,
-      image_url,
-      site_name,
-      site_favicon_url,
-      price,
-      currency,
+      title: metadata.title,
+      description: metadata.description,
+      image_url: metadata.image_url,
+      site_name: metadata.site_name,
+      site_favicon_url: metadata.site_favicon_url,
+      price: metadata.price,
+      currency: metadata.currency,
+      brand: metadata.brand || null,
+      category: metadata.category || null,
+      availability: metadata.availability || null,
+      condition: metadata.condition || null,
+      rating: metadata.rating,
+      rating_count: metadata.rating_count,
+      review_count: metadata.review_count,
+      seller: metadata.seller || null,
+      sku: metadata.sku || null,
+      gtin: metadata.gtin || null,
+      sale_price: metadata.sale_price || null,
+      original_price: metadata.original_price || null,
+      additional_images: metadata.additional_images.length > 0 ? metadata.additional_images : null,
+      color: metadata.color || null,
+      size: metadata.size || null,
+      shipping: metadata.shipping || null,
+      return_policy: metadata.return_policy || null,
+      product_metadata: Object.keys(metadata.product_metadata).length > 0
+        ? metadata.product_metadata
+        : null,
       enrichment_status: "completed",
       updated_at: new Date().toISOString(),
     };
 
     // Cache image to Supabase Storage
-    if (image_url) {
+    if (metadata.image_url) {
       try {
-        const imgResp = await fetch(image_url, {
+        const imgResp = await fetch(metadata.image_url, {
           headers: {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -296,11 +184,11 @@ Deno.serve(async (req) => {
         }
       } catch (imgErr: any) {
         console.error("Image caching failed:", imgErr.message);
-        // Non-fatal — enrichment continues without cached image
       }
     }
 
     // Check if we should update lowest_price
+    const price = metadata.sale_price || metadata.price;
     if (price) {
       if (!item.lowest_price || price < item.lowest_price) {
         update.lowest_price = price;
@@ -321,19 +209,50 @@ Deno.serve(async (req) => {
     // Insert price_history row
     const { error: historyError } = await supabase
       .from("price_history")
-      .insert({ item_id: itemId, price, currency });
+      .insert({ item_id: itemId, price, currency: metadata.currency });
 
     if (historyError) {
       console.error("Failed to insert price_history:", historyError.message);
-      // Non-fatal — enrichment still succeeded
+    }
+
+    // Insert similar products (replace any existing ones for this item)
+    if (similarProducts.length > 0) {
+      // Delete old similar products for this item
+      await supabase
+        .from("similar_products")
+        .delete()
+        .eq("item_id", itemId);
+
+      const rows = similarProducts.map((sp) => ({
+        item_id: itemId,
+        title: sp.title,
+        url: sp.url,
+        image_url: sp.image_url || null,
+        price: sp.price || null,
+        currency: sp.currency || null,
+        site_name: sp.site_name || null,
+        similarity_source: sp.similarity_source,
+      }));
+
+      const { error: simError } = await supabase
+        .from("similar_products")
+        .insert(rows);
+
+      if (simError) {
+        console.error("Failed to insert similar products:", simError.message);
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true, item_id: itemId }),
+      JSON.stringify({
+        success: true,
+        item_id: itemId,
+        fields_extracted: Object.keys(update).filter((k) => update[k] != null && k !== "enrichment_status" && k !== "updated_at").length,
+        similar_products_found: similarProducts.length,
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (e: any) {
-    // Catch-all: mark as failed
     await supabase
       .from("items")
       .update({ enrichment_status: "failed", updated_at: new Date().toISOString() })

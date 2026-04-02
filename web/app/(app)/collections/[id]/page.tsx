@@ -22,11 +22,25 @@ export default async function CollectionDetailPage({
     notFound();
   }
 
-  const { data: items } = await supabase
+  // Query items + price_history; fall back to items-only if the join fails
+  // (e.g. price_history table missing or PostgREST schema cache stale)
+  let items: any[] | null = null;
+  const { data: itemsWithHistory, error: historyError } = await supabase
     .from("items")
     .select("*, price_history(id, price, currency, checked_at)")
     .eq("collection_id", id)
     .order("sort_order", { ascending: true });
+
+  if (historyError) {
+    const { data: itemsOnly } = await supabase
+      .from("items")
+      .select("*")
+      .eq("collection_id", id)
+      .order("sort_order", { ascending: true });
+    items = (itemsOnly ?? []).map((item: any) => ({ ...item, price_history: [] }));
+  } else {
+    items = itemsWithHistory;
+  }
 
   return (
     <div>
