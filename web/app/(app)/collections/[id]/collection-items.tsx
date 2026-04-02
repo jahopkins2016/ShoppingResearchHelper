@@ -63,6 +63,7 @@ export default function CollectionItems({
   const [shareRole, setShareRole] = useState<"viewer" | "editor">("viewer");
   const [sharing, setSharing] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const [inspectItem, setInspectItem] = useState<Item | null>(null);
 
   const supabase = createClient();
 
@@ -343,10 +344,32 @@ export default function CollectionItems({
                       ↓ Drop
                     </button>
                   )}
+                  <button
+                    className={styles.inspectBtn}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setInspectItem(item);
+                    }}
+                    title="Inspect metadata"
+                  >
+                    🔍
+                  </button>
                 </div>
               ) : (
                 <div className={styles.imagePlaceholder}>
                   <span className={styles.placeholderIcon}>🖼</span>
+                  <button
+                    className={styles.inspectBtn}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setInspectItem(item);
+                    }}
+                    title="Inspect metadata"
+                  >
+                    🔍
+                  </button>
                 </div>
               )}
               <div className={styles.cardBody}>
@@ -460,6 +483,13 @@ export default function CollectionItems({
             setShareEmail("");
             setShareMsg(null);
           }}
+        />
+      )}
+      {inspectItem && (
+        <InspectModal
+          item={inspectItem}
+          onClose={() => setInspectItem(null)}
+          formatDate={formatDate}
         />
       )}
     </>
@@ -598,6 +628,170 @@ function ShareModal({
             {sharing ? "Sending…" : "Send Invite"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function InspectModal({
+  item,
+  onClose,
+  formatDate,
+}: {
+  item: Item;
+  onClose: () => void;
+  formatDate: (iso: string) => string;
+}) {
+  const fields: [string, unknown][] = [
+    ["ID", item.id],
+    ["URL", item.url],
+    ["Title", item.title],
+    ["Description", item.description],
+    ["Image URL", item.image_url],
+    ["Cached Image", item.cached_image_path],
+    ["Price", item.price],
+    ["Currency", item.currency],
+    ["Sale Price", item.sale_price],
+    ["Original Price", item.original_price],
+    ["Lowest Price", item.lowest_price],
+    ["Brand", item.brand],
+    ["Category", item.category as string],
+    ["Availability", item.availability],
+    ["Condition", item.condition],
+    ["Rating", item.rating],
+    ["Rating Count", item.rating_count],
+    ["Review Count", item.review_count],
+    ["Seller", item.seller],
+    ["Color", item.color],
+    ["Size", item.size],
+    ["Shipping", item.shipping],
+    ["Return Policy", item.return_policy],
+    ["Site Name", item.site_name],
+    ["Enrichment", item.enrichment_status],
+    ["SKU", item.sku as string],
+    ["GTIN", item.gtin as string],
+    ["Additional Images", item.additional_images as string[]],
+    ["Notes", item.notes],
+    ["Product Metadata", item.product_metadata as Record<string, unknown>],
+  ];
+
+  const history = [...(item.price_history ?? [])].sort(
+    (a, b) =>
+      new Date(b.checked_at).getTime() - new Date(a.checked_at).getTime()
+  );
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.inspectContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.inspectHeader}>
+          <h3 className={styles.modalTitle}>Metadata Inspector</h3>
+          <button className={styles.inspectClose} onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        {(item.cached_image_path || item.image_url) && (
+          <div className={styles.inspectImageWrap}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={(item.cached_image_path || item.image_url)!}
+              alt={item.title ?? ""}
+              className={styles.inspectImage}
+            />
+          </div>
+        )}
+
+        <table className={styles.inspectTable}>
+          <tbody>
+            {fields.map(([label, value]) => {
+              if (value == null || value === "") return null;
+              let display: React.ReactNode;
+              if (Array.isArray(value)) {
+                display =
+                  value.length > 0 ? (
+                    <div className={styles.inspectList}>
+                      {value.map((v, i) => (
+                        <span key={i} className={styles.inspectListItem}>
+                          {typeof v === "string" && v.startsWith("http") ? (
+                            <a
+                              href={v}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {v}
+                            </a>
+                          ) : (
+                            String(v)
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null;
+              } else if (typeof value === "object") {
+                display = (
+                  <pre className={styles.inspectJson}>
+                    {JSON.stringify(value, null, 2)}
+                  </pre>
+                );
+              } else if (
+                typeof value === "string" &&
+                value.startsWith("http")
+              ) {
+                display = (
+                  <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.inspectLink}
+                  >
+                    {value}
+                  </a>
+                );
+              } else {
+                display = String(value);
+              }
+              if (!display) return null;
+              return (
+                <tr key={label as string}>
+                  <td className={styles.inspectLabel}>{label as string}</td>
+                  <td className={styles.inspectValue}>{display}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {history.length > 0 && (
+          <div className={styles.inspectSection}>
+            <h4 className={styles.inspectSectionTitle}>
+              Price History ({history.length})
+            </h4>
+            <table className={styles.inspectTable}>
+              <thead>
+                <tr>
+                  <th className={styles.inspectLabel}>Date</th>
+                  <th className={styles.inspectLabel}>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((row) => (
+                  <tr key={row.id}>
+                    <td className={styles.inspectValue}>
+                      {formatDate(row.checked_at)}
+                    </td>
+                    <td className={styles.inspectValue}>
+                      {row.currency ?? "$"}
+                      {row.price ?? "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

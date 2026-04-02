@@ -558,3 +558,165 @@
   color: var(--color-success);
   margin-bottom: 12px;
 }
+
+/* Inspect button on card */
+.inspectBtn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.card:hover .inspectBtn {
+  opacity: 1;
+}
+
+.inspectBtn:hover {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Inspect modal */
+.inspectContent {
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.inspectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.inspectClose {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.inspectClose:hover {
+  background: var(--color-surface-container-low);
+  color: var(--color-text);
+}
+
+.inspectImageWrap {
+  width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--color-surface-container);
+}
+
+.inspectImage {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+}
+
+.inspectTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.inspectTable tr {
+  border-bottom: 1px solid var(--color-surface-container);
+}
+
+.inspectTable tr:last-child {
+  border-bottom: none;
+}
+
+.inspectLabel {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 6px 12px 6px 0;
+  white-space: nowrap;
+  vertical-align: top;
+  width: 130px;
+  font-size: 12px;
+}
+
+.inspectValue {
+  color: var(--color-text);
+  padding: 6px 0;
+  word-break: break-all;
+  font-size: 12px;
+}
+
+.inspectLink {
+  color: var(--color-primary-container);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.inspectLink:hover {
+  opacity: 0.7;
+}
+
+.inspectList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inspectListItem {
+  font-size: 12px;
+}
+
+.inspectListItem a {
+  color: var(--color-primary-container);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.inspectJson {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--color-surface-container-low);
+  padding: 8px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inspectSection {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-surface-container-high);
+}
+
+.inspectSectionTitle {
+  font-family: var(--font-headline);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
