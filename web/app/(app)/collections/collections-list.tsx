@@ -43,15 +43,18 @@ function timeAgo(dateStr: string) {
 export default function CollectionsList({
   initialCollections,
   coverMap,
+  pinnedIds: initialPinnedIds,
 }: {
   initialCollections: Collection[];
   coverMap: Record<string, string>;
+  pinnedIds: string[];
 }) {
   const [collections, setCollections] = useState(initialCollections);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pinnedSet, setPinnedSet] = useState<Set<string>>(() => new Set(initialPinnedIds));
   const router = useRouter();
   const supabase = createClient();
 
@@ -97,6 +100,40 @@ export default function CollectionsList({
       setCopiedId(collection.id);
       setTimeout(() => setCopiedId(null), 2000);
     }
+  }
+
+  async function handleTogglePin(e: React.MouseEvent, collection: Collection) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const isPinned = pinnedSet.has(collection.id);
+
+    if (isPinned) {
+      setPinnedSet((prev) => {
+        const next = new Set(prev);
+        next.delete(collection.id);
+        return next;
+      });
+      await supabase
+        .from("pinned_collections")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("collection_id", collection.id);
+    } else {
+      setPinnedSet((prev) => new Set(prev).add(collection.id));
+      const nextOrder = pinnedSet.size;
+      await supabase.from("pinned_collections").insert({
+        user_id: user.id,
+        collection_id: collection.id,
+        sort_order: nextOrder,
+      });
+    }
+    router.refresh();
   }
 
   return (
@@ -185,6 +222,15 @@ export default function CollectionsList({
                       </span>
                     </div>
                   </div>
+                  <div className={styles.cardActions}>
+                  <button
+                    className={`${styles.pinBtn} ${pinnedSet.has(c.id) ? styles.pinBtnActive : ''}`}
+                    onClick={(e) => handleTogglePin(e, c)}
+                    aria-label={pinnedSet.has(c.id) ? `Unpin ${c.name}` : `Pin ${c.name}`}
+                    title={pinnedSet.has(c.id) ? 'Unpin from sidebar' : 'Pin to sidebar'}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={pinnedSet.has(c.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+                  </button>
                   <button
                     className={styles.shareBtn}
                     onClick={(e) => handleShare(e, c)}
@@ -197,6 +243,7 @@ export default function CollectionsList({
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                     )}
                   </button>
+                  </div>
                 </div>
               </div>
             </Link>

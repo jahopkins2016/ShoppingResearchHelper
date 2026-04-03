@@ -41,6 +41,14 @@ export default async function CollectionsPage() {
     .eq("shared_with_user_id", user!.id)
     .eq("status", "accepted");
 
+  // Fetch pinned collection IDs
+  const { data: pinnedRows } = await supabase
+    .from("pinned_collections")
+    .select("collection_id")
+    .eq("user_id", user!.id);
+
+  const pinnedIds = (pinnedRows ?? []).map((r: any) => r.collection_id as string);
+
   const sharedItems =
     shares
       ?.map((s: any) => ({
@@ -52,7 +60,7 @@ export default async function CollectionsPage() {
 
   return (
     <div>
-      <CollectionsList initialCollections={collections ?? []} coverMap={coverMap} />
+      <CollectionsList initialCollections={collections ?? []} coverMap={coverMap} pinnedIds={pinnedIds} />
 
       {/* Shared with me section */}
       <section className={styles.sharedSection}>

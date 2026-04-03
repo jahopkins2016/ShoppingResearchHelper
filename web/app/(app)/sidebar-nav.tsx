@@ -1,22 +1,102 @@
 "use client";
 
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./layout.module.css";
+
+type PinnedCollection = {
+  id: string;
+  name: string;
+  sort_order: number;
+  item_count: number;
+};
 
 export default function SidebarNav({
   pendingCount,
+  pinnedCollections: initialPinned,
 }: {
   pendingCount: number;
+  pinnedCollections: PinnedCollection[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [pinned, setPinned] = useState(initialPinned);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  const supabase = createClient();
+
+  const handleUnpin = useCallback(
+    async (collectionId: string) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setPinned((prev) => prev.filter((p) => p.id !== collectionId));
+
+      await supabase
+        .from("pinned_collections")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("collection_id", collectionId);
+
+      router.refresh();
+    },
+    [supabase, router]
+  );
+
+  const handleDragStart = (index: number) => {
+    dragItem.current = index;
+  };
+
+  const handleDragEnter = (index: number) => {
+    dragOverItem.current = index;
+  };
+
+  const handleDragEnd = async () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+
+    const reordered = [...pinned];
+    const [removed] = reordered.splice(dragItem.current, 1);
+    reordered.splice(dragOverItem.current, 0, removed);
+
+    const updated = reordered.map((item, i) => ({ ...item, sort_order: i }));
+    setPinned(updated);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    // Persist new order
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await Promise.all(
+      updated.map((item) =>
+        supabase
+          .from("pinned_collections")
+          .update({ sort_order: item.sort_order })
+          .eq("user_id", user.id)
+          .eq("collection_id", item.id)
+      )
+    );
+  };
 
   return (
     <nav className={styles.sidebarNav}>
       <Link
         href="/collections"
         className={`${styles.sidebarLink} ${
-          pathname.startsWith("/collections") ? styles.sidebarLinkActive : ""
+          pathname === "/collections" ? styles.sidebarLinkActive : ""
         }`}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -34,6 +114,47 @@ export default function SidebarNav({
           <span className={styles.navBadge}>{pendingCount}</span>
         )}
       </Link>
+
+      {pinned.length > 0 && (
+        <div className={styles.pinnedSection}>
+          <div className={styles.pinnedHeader}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+            Pinned
+          </div>
+          {pinned.map((collection, index) => (
+            <div
+              key={collection.id}
+              className={styles.pinnedItem}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragEnter={() => handleDragEnter(index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              <Link
+                href={`/collections/${collection.id}`}
+                className={`${styles.sidebarLink} ${styles.pinnedLink} ${
+                  pathname === `/collections/${collection.id}`
+                    ? styles.sidebarLinkActive
+                    : ""
+                }`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span className={styles.pinnedName}>{collection.name}</span>
+                <span className={styles.pinnedCount}>{collection.item_count}</span>
+              </Link>
+              <button
+                className={styles.unpinBtn}
+                onClick={() => handleUnpin(collection.id)}
+                aria-label={`Unpin ${collection.name}`}
+                title="Unpin"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }

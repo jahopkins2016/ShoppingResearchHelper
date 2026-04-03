@@ -283,6 +283,94 @@
   font-weight: 700;
 }
 
+/* ── Pinned collections ── */
+.pinnedSection {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.pinnedHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.pinnedItem {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: grab;
+}
+
+.pinnedItem:active {
+  cursor: grabbing;
+}
+
+.pinnedLink {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 8px 14px;
+  gap: 10px;
+}
+
+.pinnedName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.pinnedCount {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-container-high);
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.unpinBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  position: absolute;
+  right: 8px;
+  flex-shrink: 0;
+}
+
+.pinnedItem:hover .unpinBtn {
+  opacity: 1;
+}
+
+.unpinBtn:hover {
+  background: var(--color-surface-container-highest);
+  color: var(--color-text);
+}
+
 .sidebarBottom {
   margin-top: auto;
   padding-top: 24px;

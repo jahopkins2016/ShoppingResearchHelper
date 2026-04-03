@@ -40,6 +40,7 @@ interface Item {
   size: string | null;
   shipping: string | null;
   return_policy: string | null;
+  updated_at: string | null;
   price_history: PriceHistoryRow[];
   [key: string]: unknown;
 }
@@ -668,6 +669,7 @@ function InspectModal({
     ["Return Policy", item.return_policy],
     ["Site Name", item.site_name],
     ["Enrichment", item.enrichment_status],
+    ["Last Enriched", item.updated_at ? new Date(item.updated_at).toLocaleString() : null],
     ["SKU", item.sku as string],
     ["GTIN", item.gtin as string],
     ["Additional Images", item.additional_images as string[]],

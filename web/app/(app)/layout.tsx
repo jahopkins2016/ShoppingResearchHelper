@@ -35,6 +35,41 @@ export default async function AppLayout({
     .eq("shared_with_email", userEmail!)
     .eq("status", "pending");
 
+  // Fetch pinned collections for sidebar
+  const { data: pinnedRows } = await supabase
+    .from("pinned_collections")
+    .select("collection_id, sort_order, collections(id, name)")
+    .eq("user_id", user.id)
+    .order("sort_order", { ascending: true });
+
+  // Fetch item counts for pinned collections
+  const pinnedIds = (pinnedRows ?? [])
+    .filter((r: any) => r.collections)
+    .map((r: any) => r.collections.id as string);
+
+  let itemCountMap: Record<string, number> = {};
+  if (pinnedIds.length > 0) {
+    const { data: countRows } = await supabase
+      .from("items")
+      .select("collection_id")
+      .in("collection_id", pinnedIds);
+
+    if (countRows) {
+      for (const row of countRows) {
+        itemCountMap[row.collection_id] = (itemCountMap[row.collection_id] ?? 0) + 1;
+      }
+    }
+  }
+
+  const pinnedCollections = (pinnedRows ?? [])
+    .filter((r: any) => r.collections)
+    .map((r: any) => ({
+      id: r.collections.id as string,
+      name: r.collections.name as string,
+      sort_order: r.sort_order as number,
+      item_count: itemCountMap[r.collections.id] ?? 0,
+    }));
+
   return (
     <div className={styles.shell}>
       {/* Top bar */}
@@ -68,7 +103,7 @@ export default async function AppLayout({
             </div>
           </div>
 
-          <SidebarNav pendingCount={pendingCount ?? 0} />
+          <SidebarNav pendingCount={pendingCount ?? 0} pinnedCollections={pinnedCollections} />
 
           <div className={styles.sidebarBottom}>
             <Link href="/get-extension" className={styles.extensionBanner}>
