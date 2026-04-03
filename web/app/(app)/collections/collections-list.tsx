@@ -203,6 +203,7 @@ export default function CollectionsList({
               key={c.id}
               href={`/collections/${c.id}`}
               className={styles.card}
+              draggable={false}
             >
               <div
                 className={styles.cardCover}
