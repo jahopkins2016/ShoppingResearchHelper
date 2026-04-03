@@ -156,7 +156,7 @@ create policy "Shared users can view sharer profiles"
       where shared_by = profiles.id
         and (
           shared_with_user_id = auth.uid()
-          or shared_with_email = (select email from public.profiles p2 where p2.id = auth.uid())
+          or shared_with_email = auth.jwt() ->> 'email'
         )
     )
   );
@@ -176,7 +176,7 @@ create policy "Shared users can view shared collections"
         and status in ('pending', 'accepted')
         and (
           shared_with_user_id = auth.uid()
-          or shared_with_email = (select email from public.profiles where id = auth.uid())
+          or shared_with_email = auth.jwt() ->> 'email'
         )
     )
   );
@@ -218,16 +218,12 @@ create policy "Collection owners can manage shares"
 
 create policy "Shared users can view their own share"
   on public.collection_shares for select using (
-    shared_with_user_id = auth.uid() or shared_with_email = (
-      select email from public.profiles where id = auth.uid()
-    )
+    shared_with_user_id = auth.uid() or shared_with_email = auth.jwt() ->> 'email'
   );
 
 create policy "Shared users can accept or decline their own share"
   on public.collection_shares for update using (
-    shared_with_email = (
-      select email from public.profiles where id = auth.uid()
-    )
+    shared_with_email = auth.jwt() ->> 'email'
   ) with check (
     status in ('accepted', 'declined')
   );
