@@ -44,10 +44,12 @@ export default function CollectionsList({
   initialCollections,
   coverMap,
   pinnedIds: initialPinnedIds,
+  itemCountMap,
 }: {
   initialCollections: Collection[];
   coverMap: Record<string, string>;
   pinnedIds: string[];
+  itemCountMap: Record<string, number>;
 }) {
   const [collections, setCollections] = useState(initialCollections);
   const [showForm, setShowForm] = useState(false);
@@ -217,6 +219,10 @@ export default function CollectionsList({
                   <div>
                     <h2 className={styles.cardTitle}>{c.name}</h2>
                     <div className={styles.cardMeta}>
+                      <span className={styles.cardItemCount}>
+                        {itemCountMap[c.id] ?? 0} {(itemCountMap[c.id] ?? 0) === 1 ? 'item' : 'items'}
+                      </span>
+                      <span className={styles.cardMetaDot}>·</span>
                       <span className={styles.cardUpdated}>
                         Updated {timeAgo(c.created_at)}
                       </span>

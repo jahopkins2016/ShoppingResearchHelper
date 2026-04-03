@@ -112,6 +112,17 @@
   gap: 8px;
 }
 
+.cardItemCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.cardMetaDot {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 .cardUpdated {
   font-size: 12px;
   color: var(--color-text-muted);

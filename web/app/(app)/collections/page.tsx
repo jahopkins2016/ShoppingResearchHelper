@@ -34,6 +34,21 @@ export default async function CollectionsPage() {
     }
   }
 
+  // Fetch item counts per collection
+  const itemCountMap: Record<string, number> = {};
+  if (collections && collections.length > 0) {
+    const { data: allItems } = await supabase
+      .from("items")
+      .select("collection_id")
+      .in("collection_id", collections.map((c: any) => c.id));
+
+    if (allItems) {
+      for (const item of allItems) {
+        itemCountMap[item.collection_id] = (itemCountMap[item.collection_id] ?? 0) + 1;
+      }
+    }
+  }
+
   // Fetch shared collections for the dashboard
   const { data: shares } = await supabase
     .from("collection_shares")
@@ -60,7 +75,7 @@ export default async function CollectionsPage() {
 
   return (
     <div>
-      <CollectionsList initialCollections={collections ?? []} coverMap={coverMap} pinnedIds={pinnedIds} />
+      <CollectionsList initialCollections={collections ?? []} coverMap={coverMap} pinnedIds={pinnedIds} itemCountMap={itemCountMap} />
 
       {/* Shared with me section */}
       <section className={styles.sharedSection}>
