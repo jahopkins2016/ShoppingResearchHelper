@@ -142,6 +142,27 @@ alter table public.collection_shares enable row level security;
 alter table public.price_history enable row level security;
 alter table public.referrals enable row level security;
 
+-- Helper functions (SECURITY DEFINER bypasses RLS to avoid circular policy recursion)
+create or replace function public.rls_is_collection_owner(cid uuid)
+returns boolean language sql security definer stable as $$
+  select exists (
+    select 1 from public.collections where id = cid and user_id = auth.uid()
+  );
+$$;
+
+create or replace function public.rls_is_collection_shared_with_me(cid uuid)
+returns boolean language sql security definer stable as $$
+  select exists (
+    select 1 from public.collection_shares
+    where collection_id = cid
+      and status in ('pending', 'accepted')
+      and (
+        shared_with_user_id = auth.uid()
+        or shared_with_email = auth.jwt() ->> 'email'
+      )
+  );
+$$;
+
 -- profiles
 create policy "Users can view their own profile"
   on public.profiles for select using (auth.uid() = id);
@@ -170,15 +191,7 @@ create policy "Public collections are viewable by anyone"
 
 create policy "Shared users can view shared collections"
   on public.collections for select using (
-    exists (
-      select 1 from public.collection_shares
-      where collection_id = collections.id
-        and status in ('pending', 'accepted')
-        and (
-          shared_with_user_id = auth.uid()
-          or shared_with_email = auth.jwt() ->> 'email'
-        )
-    )
+    public.rls_is_collection_shared_with_me(id)
   );
 
 -- items
@@ -209,11 +222,7 @@ create policy "Collection viewers and editors can view items"
 -- collection_shares
 create policy "Collection owners can manage shares"
   on public.collection_shares for all using (
-    exists (
-      select 1 from public.collections
-      where id = collection_shares.collection_id
-        and user_id = auth.uid()
-    )
+    public.rls_is_collection_owner(collection_id)
   );
 
 create policy "Shared users can view their own share"
