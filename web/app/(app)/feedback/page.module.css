@@ -1,0 +1,240 @@
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: var(--font-headline);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+/* ── Form ── */
+.formCard {
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 40px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.select {
+  width: 100%;
+  border: none;
+  background: var(--color-surface-container-low);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+  font-family: var(--font-body);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737686' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.select:focus {
+  background-color: var(--color-surface-container-lowest);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  border: none;
+  background: var(--color-surface-container-low);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+  font-family: var(--font-body);
+  resize: vertical;
+  line-height: 1.5;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.textarea:focus {
+  background: var(--color-surface-container-lowest);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.submitBtn {
+  background: linear-gradient(135deg, #004ac6, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.submitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.successMsg {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin-top: 12px;
+}
+
+/* ── History ── */
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  margin-left: 4px;
+}
+
+.feedbackList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedbackCard {
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Category badges ── */
+.categoryBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+.categoryBug {
+  background: #ffdad6;
+  color: #93000a;
+}
+
+.categoryFeature {
+  background: #dbe1ff;
+  color: #00174b;
+}
+
+.categoryGeneral {
+  background: var(--color-surface-container-high);
+  color: var(--color-text-secondary);
+}
+
+.categoryComplaint {
+  background: #fff3e0;
+  color: #7c4a00;
+}
+
+/* ── Status badges ── */
+.statusBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  margin-left: auto;
+}
+
+.statusOpen {
+  background: #dbe1ff;
+  color: #004ac6;
+}
+
+.statusReviewed {
+  background: #fff3e0;
+  color: #7c4a00;
+}
+
+.statusResolved {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.cardMessage {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardDate {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 10px;
+}
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--color-surface-container-low);
+  border-radius: var(--radius-xl);
+}
+
+.emptyText {
+  font-family: var(--font-headline);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.emptySubtext {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+}

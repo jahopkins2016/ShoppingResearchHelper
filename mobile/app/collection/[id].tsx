@@ -65,6 +65,14 @@ export default function CollectionItemsScreen() {
   const [addUrl, setAddUrl] = useState('');
   const [addSaving, setAddSaving] = useState(false);
 
+  const [similarVisible, setSimilarVisible] = useState(false);
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarItemTitle, setSimilarItemTitle] = useState('');
+
+  const [nearbyVisible, setNearbyVisible] = useState(false);
+  const [nearbyItem, setNearbyItem] = useState<Item | null>(null);
+
   useEffect(() => {
     if (id) {
       fetchCollection();
@@ -215,6 +223,36 @@ export default function CollectionItemsScreen() {
     supabase.functions.invoke('enrich-item', { body: { item_id: item.id } });
   }
 
+  async function handleShowSimilar(item: Item) {
+    setSimilarItemTitle(item.title ?? 'this item');
+    setSimilarVisible(true);
+    setSimilarLoading(true);
+    const { data } = await supabase
+      .from('similar_products')
+      .select('*')
+      .eq('item_id', item.id)
+      .order('created_at', { ascending: false });
+    setSimilarProducts(data ?? []);
+    setSimilarLoading(false);
+  }
+
+  function handleShowNearby(item: Item) {
+    setNearbyItem(item);
+    setNearbyVisible(true);
+  }
+
+  function openNearbyMaps() {
+    if (!nearbyItem) return;
+    const query = [nearbyItem.title, 'buy near me'].filter(Boolean).join(' ');
+    Linking.openURL(`https://www.google.com/maps/search/${encodeURIComponent(query)}`);
+  }
+
+  function openNearbyShopping() {
+    if (!nearbyItem) return;
+    const query = [nearbyItem.title, 'buy near me'].filter(Boolean).join(' ');
+    Linking.openURL(`https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=shop&tbs=mr:1,local_avail:1`);
+  }
+
   function renderItem({ item }: { item: Item }) {
     const historySlice = item.price_history.slice(0, 3);
     const imageUri = item.cached_image_path || item.image_url;
@@ -319,6 +357,24 @@ export default function CollectionItemsScreen() {
           {item.last_viewed_at ? (
             <Text style={styles.lastViewed}>Viewed {formatDate(item.last_viewed_at)}</Text>
           ) : null}
+
+          {/* Action buttons row */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleShowSimilar(item)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.actionBtnText}>🔄 Options</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleShowNearby(item)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.actionBtnText}>📍 Nearby</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -459,6 +515,109 @@ export default function CollectionItemsScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Similar Products Modal */}
+      <Modal
+        visible={similarVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSimilarVisible(false)}
+      >
+        <Pressable style={styles.overlay} onPress={() => setSimilarVisible(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Similar Options</Text>
+            <Text style={styles.sheetSubtext}>
+              Other options for &ldquo;{similarItemTitle}&rdquo;
+            </Text>
+            {similarLoading ? (
+              <ActivityIndicator size="small" color="#2563eb" style={styles.sheetLoader} />
+            ) : similarProducts.length === 0 ? (
+              <Text style={styles.sheetEmpty}>
+                No similar products found yet. Re-open the item to trigger a refresh.
+              </Text>
+            ) : (
+              <FlatList
+                data={similarProducts}
+                keyExtractor={(p) => p.id}
+                style={styles.sheetList}
+                renderItem={({ item: p }) => (
+                  <TouchableOpacity
+                    style={styles.similarRow}
+                    onPress={() => Linking.openURL(p.url)}
+                    activeOpacity={0.8}
+                  >
+                    {p.image_url ? (
+                      <Image source={{ uri: p.image_url }} style={styles.similarImage} />
+                    ) : (
+                      <View style={[styles.similarImage, styles.similarPlaceholder]}>
+                        <Text style={{ fontSize: 16, opacity: 0.4 }}>🖼</Text>
+                      </View>
+                    )}
+                    <View style={styles.similarBody}>
+                      <Text style={styles.similarTitle} numberOfLines={2}>{p.title}</Text>
+                      {p.price && (
+                        <Text style={styles.similarPrice}>
+                          {p.currency ?? '$'}{p.price}
+                        </Text>
+                      )}
+                      {p.site_name && (
+                        <Text style={styles.similarSite}>{p.site_name}</Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <TouchableOpacity
+              style={styles.dismissButton}
+              onPress={() => setSimilarVisible(false)}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.dismissText}>Close</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Nearby Stores Modal */}
+      <Modal
+        visible={nearbyVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNearbyVisible(false)}
+      >
+        <Pressable style={styles.overlay} onPress={() => setNearbyVisible(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Find Nearby</Text>
+            <Text style={styles.sheetSubtext}>
+              Find &ldquo;{nearbyItem?.title ?? 'this item'}&rdquo; at stores near you
+            </Text>
+            <TouchableOpacity style={styles.nearbyOption} onPress={openNearbyMaps} activeOpacity={0.8}>
+              <Text style={styles.nearbyOptionIcon}>🗺️</Text>
+              <View>
+                <Text style={styles.nearbyOptionTitle}>Google Maps</Text>
+                <Text style={styles.nearbyOptionSub}>Find stores selling this nearby</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.nearbyOption} onPress={openNearbyShopping} activeOpacity={0.8}>
+              <Text style={styles.nearbyOptionIcon}>🛒</Text>
+              <View>
+                <Text style={styles.nearbyOptionTitle}>Google Shopping (Local)</Text>
+                <Text style={styles.nearbyOptionSub}>Compare local prices and availability</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dismissButton}
+              onPress={() => setNearbyVisible(false)}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.dismissText}>Close</Text>
+            </TouchableOpacity>
           </Pressable>
         </Pressable>
       </Modal>
@@ -754,4 +913,97 @@ const styles = StyleSheet.create({
   },
   addSaveBtnDisabled: { opacity: 0.5 },
   addSaveText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+
+  // Action row on cards
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#e7e8e9',
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: '#f3f4f5',
+    alignItems: 'center',
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#434655',
+  },
+
+  // Similar products
+  similarRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e7e8e9',
+  },
+  similarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: '#e7e8e9',
+  },
+  similarPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  similarBody: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  similarTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#191c1d',
+    lineHeight: 17,
+  },
+  similarPrice: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#191c1d',
+    marginTop: 2,
+  },
+  similarSite: {
+    fontSize: 11,
+    color: '#737686',
+    marginTop: 1,
+  },
+
+  // Sheet subtext
+  sheetSubtext: {
+    fontSize: 13,
+    color: '#434655',
+    marginBottom: 16,
+  },
+
+  // Nearby options
+  nearbyOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f5',
+    marginBottom: 10,
+  },
+  nearbyOptionIcon: {
+    fontSize: 28,
+  },
+  nearbyOptionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#191c1d',
+  },
+  nearbyOptionSub: {
+    fontSize: 12,
+    color: '#434655',
+    marginTop: 2,
+  },
 });

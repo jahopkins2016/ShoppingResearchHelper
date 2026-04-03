@@ -189,7 +189,7 @@ export default function SettingsPage() {
         Sign Out
       </button>
 
-      <p className={styles.version}>SaveIt Version 1.0.0<br />© 2026 SaveIt</p>
+      <p className={styles.version}>SaveIt Version 1.6.0<br />© 2026 SaveIt</p>
     </div>
   );
 }

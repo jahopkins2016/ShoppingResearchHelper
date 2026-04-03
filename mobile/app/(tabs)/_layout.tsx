@@ -51,6 +51,8 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Collections' }} />
       <Tabs.Screen name="shared" options={{ title: 'Shared' }} />
+      <Tabs.Screen name="friends" options={{ title: 'Friends' }} />
+      <Tabs.Screen name="messages" options={{ title: 'Messages' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>
   );

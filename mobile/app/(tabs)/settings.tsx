@@ -125,7 +125,7 @@ export default function SettingsScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      <Text style={styles.version}>SaveIt Version 1.0.0{'\n'}© 2026 SaveIt</Text>
+      <Text style={styles.version}>SaveIt Version 1.6.0{'\n'}© 2026 SaveIt</Text>
     </ScrollView>
   );
 }

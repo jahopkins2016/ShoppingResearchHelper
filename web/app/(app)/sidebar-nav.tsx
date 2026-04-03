@@ -126,6 +126,42 @@ export default function SidebarNav({
           <span className={styles.navBadge}>{pendingCount}</span>
         )}
       </Link>
+      <Link
+        href="/compare"
+        className={`${styles.sidebarLink} ${
+          pathname.startsWith("/compare") ? styles.sidebarLinkActive : ""
+        }`}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Compare
+      </Link>
+      <Link
+        href="/friends"
+        className={`${styles.sidebarLink} ${
+          pathname.startsWith("/friends") ? styles.sidebarLinkActive : ""
+        }`}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Friends
+      </Link>
+      <Link
+        href="/messages"
+        className={`${styles.sidebarLink} ${
+          pathname.startsWith("/messages") ? styles.sidebarLinkActive : ""
+        }`}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
+      </Link>
+      <Link
+        href="/feedback"
+        className={`${styles.sidebarLink} ${
+          pathname.startsWith("/feedback") ? styles.sidebarLinkActive : ""
+        }`}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Feedback
+      </Link>
 
       {pinned.length > 0 && (
         <div className={styles.pinnedSection}>

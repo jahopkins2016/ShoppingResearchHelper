@@ -45,6 +45,17 @@ interface Item {
   [key: string]: unknown;
 }
 
+interface SimilarProduct {
+  id: string;
+  title: string;
+  url: string;
+  image_url: string | null;
+  price: string | null;
+  currency: string | null;
+  site_name: string | null;
+  similarity_source: string | null;
+}
+
 export default function CollectionItems({
   initialItems,
   collectionId,
@@ -65,6 +76,10 @@ export default function CollectionItems({
   const [sharing, setSharing] = useState(false);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const [inspectItem, setInspectItem] = useState<Item | null>(null);
+  const [similarItem, setSimilarItem] = useState<Item | null>(null);
+  const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [nearbyItem, setNearbyItem] = useState<Item | null>(null);
 
   const supabase = createClient();
 
@@ -198,6 +213,27 @@ export default function CollectionItems({
       return { text: "Pre-Order", inStock: true };
     }
     return { text: avail, inStock: true };
+  }
+
+  async function handleShowSimilar(e: React.MouseEvent, item: Item) {
+    e.preventDefault();
+    e.stopPropagation();
+    setSimilarItem(item);
+    setLoadingSimilar(true);
+    setSimilarProducts([]);
+    const { data } = await supabase
+      .from("similar_products")
+      .select("*")
+      .eq("item_id", item.id)
+      .order("created_at", { ascending: false });
+    setSimilarProducts((data as SimilarProduct[]) ?? []);
+    setLoadingSimilar(false);
+  }
+
+  function handleShowNearby(e: React.MouseEvent, item: Item) {
+    e.preventDefault();
+    e.stopPropagation();
+    setNearbyItem(item);
   }
 
   function handleCardClick(item: Item) {
@@ -356,6 +392,20 @@ export default function CollectionItems({
                   >
                     🔍
                   </button>
+                  <button
+                    className={styles.similarBtn}
+                    onClick={(e) => handleShowSimilar(e, item)}
+                    title="Similar options"
+                  >
+                    🔄
+                  </button>
+                  <button
+                    className={styles.nearbyBtn}
+                    onClick={(e) => handleShowNearby(e, item)}
+                    title="Find nearby stores"
+                  >
+                    📍
+                  </button>
                 </div>
               ) : (
                 <div className={styles.imagePlaceholder}>
@@ -370,6 +420,20 @@ export default function CollectionItems({
                     title="Inspect metadata"
                   >
                     🔍
+                  </button>
+                  <button
+                    className={styles.similarBtn}
+                    onClick={(e) => handleShowSimilar(e, item)}
+                    title="Similar options"
+                  >
+                    🔄
+                  </button>
+                  <button
+                    className={styles.nearbyBtn}
+                    onClick={(e) => handleShowNearby(e, item)}
+                    title="Find nearby stores"
+                  >
+                    📍
                   </button>
                 </div>
               )}
@@ -491,6 +555,20 @@ export default function CollectionItems({
           item={inspectItem}
           onClose={() => setInspectItem(null)}
           formatDate={formatDate}
+        />
+      )}
+      {similarItem && (
+        <SimilarModal
+          item={similarItem}
+          products={similarProducts}
+          loading={loadingSimilar}
+          onClose={() => { setSimilarItem(null); setSimilarProducts([]); }}
+        />
+      )}
+      {nearbyItem && (
+        <NearbyModal
+          item={nearbyItem}
+          onClose={() => setNearbyItem(null)}
         />
       )}
     </>
@@ -794,6 +872,157 @@ function InspectModal({
             </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SimilarModal({
+  item,
+  products,
+  loading,
+  onClose,
+}: {
+  item: Item;
+  products: SimilarProduct[];
+  loading: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.inspectContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.inspectHeader}>
+          <h3 className={styles.modalTitle}>Similar Options</h3>
+          <button className={styles.inspectClose} onClick={onClose}>
+            ✕
+          </button>
+        </div>
+        <p className={styles.similarSubtext}>
+          Other options for &ldquo;{item.title ?? "this item"}&rdquo;
+        </p>
+
+        {loading && <p className={styles.loadingText}>Loading similar products…</p>}
+
+        {!loading && products.length === 0 && (
+          <div className={styles.emptyModal}>
+            <p>No similar products found yet.</p>
+            <p className={styles.emptyModalSub}>
+              Similar products are discovered during enrichment. Try re-opening the item to trigger a refresh.
+            </p>
+          </div>
+        )}
+
+        {!loading && products.length > 0 && (
+          <div className={styles.similarGrid}>
+            {products.map((p) => (
+              <a
+                key={p.id}
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.similarCard}
+              >
+                {p.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt={p.title} className={styles.similarImage} />
+                ) : (
+                  <div className={styles.similarPlaceholder}>🖼</div>
+                )}
+                <div className={styles.similarBody}>
+                  <span className={styles.similarTitle}>{p.title}</span>
+                  {p.price && (
+                    <span className={styles.similarPrice}>
+                      {p.currency ?? "$"}{p.price}
+                    </span>
+                  )}
+                  {p.site_name && (
+                    <span className={styles.similarSite}>{p.site_name}</span>
+                  )}
+                  {p.similarity_source && (
+                    <span className={styles.similarSource}>{p.similarity_source}</span>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NearbyModal({
+  item,
+  onClose,
+}: {
+  item: Item;
+  onClose: () => void;
+}) {
+  const searchQuery = encodeURIComponent(
+    [item.title, item.brand, "buy near me"].filter(Boolean).join(" ")
+  );
+  const mapsUrl = `https://www.google.com/maps/search/${searchQuery}`;
+  const shoppingUrl = `https://www.google.com/search?q=${searchQuery}&tbm=shop&tbs=mr:1,sales:1,local_avail:1`;
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.inspectContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.inspectHeader}>
+          <h3 className={styles.modalTitle}>Find Nearby</h3>
+          <button className={styles.inspectClose} onClick={onClose}>
+            ✕
+          </button>
+        </div>
+        <p className={styles.similarSubtext}>
+          Find &ldquo;{item.title ?? "this item"}&rdquo; at stores near you
+        </p>
+
+        <div className={styles.nearbyActions}>
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.nearbyLink}
+          >
+            <span className={styles.nearbyIcon}>🗺️</span>
+            <div>
+              <span className={styles.nearbyLinkTitle}>Google Maps</span>
+              <span className={styles.nearbyLinkSub}>Find stores selling this nearby</span>
+            </div>
+          </a>
+          <a
+            href={shoppingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.nearbyLink}
+          >
+            <span className={styles.nearbyIcon}>🛒</span>
+            <div>
+              <span className={styles.nearbyLinkTitle}>Google Shopping (Local)</span>
+              <span className={styles.nearbyLinkSub}>Compare local prices and availability</span>
+            </div>
+          </a>
+          {String(item.gtin ?? "") !== "" && (
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(String(item.gtin))}+where+to+buy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.nearbyLink}
+            >
+              <span className={styles.nearbyIcon}>🔎</span>
+              <div>
+                <span className={styles.nearbyLinkTitle}>Search by UPC/EAN</span>
+                <span className={styles.nearbyLinkSub}>Find using product barcode: {String(item.gtin)}</span>
+              </div>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
