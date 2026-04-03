@@ -25,6 +25,8 @@ export default function SidebarNav({
   const [pinned, setPinned] = useState(initialPinned);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -48,15 +50,21 @@ export default function SidebarNav({
     [supabase, router]
   );
 
-  const handleDragStart = (index: number) => {
+  const handleDragStart = (e: React.DragEvent, index: number) => {
     dragItem.current = index;
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragEnter = (index: number) => {
     dragOverItem.current = index;
+    setDragOverIndex(index);
   };
 
   const handleDragEnd = async () => {
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+
     if (dragItem.current === null || dragOverItem.current === null) return;
     if (dragItem.current === dragOverItem.current) {
       dragItem.current = null;
@@ -124,15 +132,20 @@ export default function SidebarNav({
           {pinned.map((collection, index) => (
             <div
               key={collection.id}
-              className={styles.pinnedItem}
+              className={`${styles.pinnedItem} ${draggingIndex === index ? styles.pinnedItemDragging : ""} ${dragOverIndex === index && draggingIndex !== index ? styles.pinnedItemDragOver : ""}`}
               draggable
-              onDragStart={() => handleDragStart(index)}
+              onDragStart={(e) => handleDragStart(e, index)}
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
+              onDragLeave={() => { if (dragOverIndex === index) setDragOverIndex(null); }}
             >
+              <span className={styles.dragHandle} aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/></svg>
+              </span>
               <Link
                 href={`/collections/${collection.id}`}
+                draggable={false}
                 className={`${styles.sidebarLink} ${styles.pinnedLink} ${
                   pathname === `/collections/${collection.id}`
                     ? styles.sidebarLinkActive

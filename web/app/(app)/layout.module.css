@@ -307,10 +307,42 @@
   align-items: center;
   position: relative;
   cursor: grab;
+  border-radius: 8px;
+  transition: background 0.15s, opacity 0.15s;
 }
 
 .pinnedItem:active {
   cursor: grabbing;
+}
+
+.pinnedItemDragging {
+  opacity: 0.4;
+}
+
+.pinnedItemDragOver {
+  background: var(--color-surface-container-high);
+  box-shadow: inset 0 -2px 0 0 var(--color-primary);
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.pinnedItem:hover .dragHandle {
+  opacity: 1;
 }
 
 .pinnedLink {
