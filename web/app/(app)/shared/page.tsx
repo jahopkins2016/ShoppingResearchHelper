@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import styles from "./page.module.css";
+import PendingInvitations from "./pending-invitations";
 
 export default async function SharedPage() {
   const supabase = await createClient();
@@ -8,6 +9,32 @@ export default async function SharedPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Get user's email for matching pending invitations
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", user!.id)
+    .single();
+
+  const userEmail = profile?.email ?? user!.email;
+
+  // Fetch pending invitations (matched by email)
+  const { data: pendingShares } = await supabase
+    .from("collection_shares")
+    .select("id, role, shared_by, created_at, collections(id, name, description), profiles!collection_shares_shared_by_fkey(display_name, email)")
+    .eq("shared_with_email", userEmail!)
+    .eq("status", "pending");
+
+  const pendingInvitations = pendingShares?.map((s: any) => ({
+    id: s.id,
+    role: s.role,
+    shared_by: s.shared_by,
+    created_at: s.created_at,
+    collection: s.collections,
+    sharer: s.profiles,
+  })).filter((s: any) => s.collection) ?? [];
+
+  // Fetch accepted shares
   const { data: shares } = await supabase
     .from("collection_shares")
     .select("*, collections(*)")
@@ -25,11 +52,19 @@ export default async function SharedPage() {
       <h1 className={styles.title}>Shared With Me</h1>
       <p className={styles.subtitle}>Collections curated by others, curated for you.</p>
 
+      <PendingInvitations initialInvitations={pendingInvitations} userId={user!.id} />
+
       {items.length === 0 ? (
         <div className={styles.empty}>
-          <p className={styles.emptyText}>Nothing shared yet.</p>
+          <p className={styles.emptyText}>
+            {pendingInvitations.length > 0
+              ? "No accepted collections yet."
+              : "Nothing shared yet."}
+          </p>
           <p className={styles.emptySubtext}>
-            Collections others have shared with you will appear here.
+            {pendingInvitations.length > 0
+              ? "Accept an invitation above to see its collection here."
+              : "Collections others have shared with you will appear here."}
           </p>
         </div>
       ) : (
