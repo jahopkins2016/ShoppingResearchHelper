@@ -1,7 +1,7 @@
 {
   "name": "SaveIt",
   "description": "Save products and pages to your collections",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "popup.html",
