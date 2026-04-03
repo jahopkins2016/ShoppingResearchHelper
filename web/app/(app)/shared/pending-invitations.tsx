@@ -85,7 +85,7 @@ export default function PendingInvitations({
               <p className={styles.pendingCardFrom}>
                 From{" "}
                 <strong>
-                  {inv.sharer.display_name || inv.sharer.email || "Someone"}
+                  {inv.sharer?.display_name || inv.sharer?.email || "Someone"}
                 </strong>
               </p>
               {inv.collection.description && (

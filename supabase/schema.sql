@@ -149,12 +149,37 @@ create policy "Users can view their own profile"
 create policy "Users can update their own profile"
   on public.profiles for update using (auth.uid() = id);
 
+create policy "Shared users can view sharer profiles"
+  on public.profiles for select using (
+    exists (
+      select 1 from public.collection_shares
+      where shared_by = profiles.id
+        and (
+          shared_with_user_id = auth.uid()
+          or shared_with_email = (select email from public.profiles p2 where p2.id = auth.uid())
+        )
+    )
+  );
+
 -- collections
 create policy "Users can manage their own collections"
   on public.collections for all using (auth.uid() = user_id);
 
 create policy "Public collections are viewable by anyone"
   on public.collections for select using (is_public = true);
+
+create policy "Shared users can view shared collections"
+  on public.collections for select using (
+    exists (
+      select 1 from public.collection_shares
+      where collection_id = collections.id
+        and status in ('pending', 'accepted')
+        and (
+          shared_with_user_id = auth.uid()
+          or shared_with_email = (select email from public.profiles where id = auth.uid())
+        )
+    )
+  );
 
 -- items
 create policy "Users can manage their own items"
