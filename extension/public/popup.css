@@ -398,6 +398,25 @@ select:focus {
   text-align: left;
 }
 
+/* Redirect URL */
+.redirect-url {
+  margin: 12px 24px 0;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--color-text-muted);
+  background: var(--color-surface-container-low);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  word-break: break-all;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.redirect-url:hover {
+  background: var(--color-surface-container-high);
+  color: var(--color-text);
+}
+
 /* Loading */
 .loading {
   display: flex;

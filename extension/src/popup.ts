@@ -16,7 +16,7 @@ interface Collection {
   is_default: boolean;
 }
 
-const EXTENSION_VERSION = '1.3.0';
+const EXTENSION_VERSION = '1.7.0';
 
 const app = document.getElementById('app')!;
 
@@ -190,12 +190,19 @@ function renderLogin() {
       <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
       <button id="login-btn" class="btn-primary">Sign In</button>
     </div>
+    <div id="redirect-url" class="redirect-url" title="Click to copy">${escapeHtml(chrome.identity.getRedirectURL())}</div>
     <div class="version-badge">v${EXTENSION_VERSION}</div>
   `;
 
   document.getElementById('website-btn')!.addEventListener('click', openWebsite);
   document.getElementById('google-btn')!.addEventListener('click', handleGoogleLogin);
   document.getElementById('login-btn')!.addEventListener('click', handleLogin);
+  document.getElementById('redirect-url')!.addEventListener('click', async () => {
+    const el = document.getElementById('redirect-url')!;
+    await navigator.clipboard.writeText(chrome.identity.getRedirectURL());
+    el.textContent = 'Copied!';
+    setTimeout(() => { el.textContent = chrome.identity.getRedirectURL(); }, 1500);
+  });
   document.getElementById('password')!.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleLogin();
   });
