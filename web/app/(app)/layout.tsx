@@ -95,7 +95,7 @@ export default async function AppLayout({
       <header className={styles.topbar}>
         <div className={styles.topbarLeft}>
           <Link href="/collections" className={styles.logo}>
-            <span className={styles.logoIcon}>S</span>
+            <img className={styles.logoIcon} src="/saveit-icon.svg" alt="SaveIt" />
             SaveIt
           </Link>
         </div>

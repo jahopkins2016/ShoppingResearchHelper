@@ -1,0 +1,12 @@
+<svg width="160" height="232" viewBox="-4 -4 168 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shadow/depth layer -->
+  <path d="M8 6 Q8 0 16 0 L144 0 Q152 0 152 8 L152 228 L80 178 L8 228 Z" fill="#000" opacity="0.08" transform="translate(4,4)"/>
+  <!-- Main bookmark -->
+  <path d="M8 0 Q0 0 0 8 L0 224 L76 174 L152 224 L152 8 Q152 0 144 0 Z" fill="#4F7EFF"/>
+  <!-- Shine stripe top -->
+  <path opacity="0.3" d="M16 0 L136 0 L136 60 L16 60 Z" fill="#7BA3FF"/>
+  <!-- Check circle -->
+  <circle cx="76" cy="100" r="36" fill="#16A34A"/>
+  <!-- Check mark -->
+  <polyline points="58,100 72,114 96,84" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -105,7 +105,7 @@ function LoginForm() {
       <form className={styles.card} onSubmit={handleSubmit}>
         {/* Logo */}
         <div className={styles.logoWrap}>
-          <div className={styles.logoIcon}>S</div>
+          <img className={styles.logoIcon} src="/saveit-icon.svg" alt="SaveIt" />
           <h1 className={styles.logo}>SaveIt</h1>
           <p className={styles.tagline}>Curate your personal gallery of inspiration.</p>
         </div>
