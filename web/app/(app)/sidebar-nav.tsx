@@ -15,9 +15,11 @@ type PinnedCollection = {
 
 export default function SidebarNav({
   pendingCount,
+  unreadMessageCount,
   pinnedCollections: initialPinned,
 }: {
   pendingCount: number;
+  unreadMessageCount: number;
   pinnedCollections: PinnedCollection[];
 }) {
   const pathname = usePathname();
@@ -152,6 +154,9 @@ export default function SidebarNav({
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Messages
+        {unreadMessageCount > 0 && (
+          <span className={styles.navBadge}>{unreadMessageCount}</span>
+        )}
       </Link>
       <Link
         href="/feedback"

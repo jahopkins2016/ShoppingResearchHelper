@@ -36,6 +36,24 @@ export default async function AppLayout({
     .eq("shared_with_email", userEmail!)
     .eq("status", "pending");
 
+  // Fetch unread message count
+  const { data: myParticipations } = await supabase
+    .from("conversation_participants")
+    .select("conversation_id")
+    .eq("user_id", user.id);
+
+  let unreadMessageCount = 0;
+  const myConvoIds = (myParticipations ?? []).map((r) => r.conversation_id);
+  if (myConvoIds.length > 0) {
+    const { count } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .in("conversation_id", myConvoIds)
+      .neq("sender_id", user.id)
+      .is("read_at", null);
+    unreadMessageCount = count ?? 0;
+  }
+
   // Fetch pinned collections for sidebar
   const { data: pinnedRows } = await supabase
     .from("pinned_collections")
@@ -104,7 +122,7 @@ export default async function AppLayout({
             </div>
           </div>
 
-          <SidebarNav pendingCount={pendingCount ?? 0} pinnedCollections={pinnedCollections} />
+          <SidebarNav pendingCount={pendingCount ?? 0} unreadMessageCount={unreadMessageCount} pinnedCollections={pinnedCollections} />
 
           <div className={styles.sidebarBottom}>
             <Link href="/get-extension" className={styles.extensionBanner}>
