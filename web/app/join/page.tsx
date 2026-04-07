@@ -49,7 +49,7 @@ export default async function JoinPage({
 
         <div className={styles.card}>
           <div className={styles.logoWrap}>
-            <div className={styles.logoIcon}>↓</div>
+            <div className={styles.logoIcon}>S</div>
             <h1 className={styles.logo}>SaveIt</h1>
           </div>
 
@@ -110,7 +110,7 @@ export default async function JoinPage({
 
       <div className={styles.card}>
         <div className={styles.logoWrap}>
-          <div className={styles.logoIcon}>↓</div>
+          <div className={styles.logoIcon}>S</div>
           <h1 className={styles.logo}>SaveIt</h1>
         </div>
 
