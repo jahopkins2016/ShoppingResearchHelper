@@ -114,7 +114,7 @@ export default function FriendsPage() {
       if (error) {
         console.error("Failed to sync friends:", error);
         setSyncing(false);
-        showToast("Failed to sync friends. Please try again.");
+        showToast(`Sync failed: ${error.message}`);
         return;
       }
     }
