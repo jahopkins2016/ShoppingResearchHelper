@@ -68,17 +68,8 @@ body {
 }
 
 .logo-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-container));
-  color: #fff;
-  font-family: var(--font-headline);
-  font-size: 14px;
-  font-weight: 800;
+  width: 28px;
+  height: auto;
 }
 
 .version-badge {

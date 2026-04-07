@@ -16,7 +16,7 @@ interface Collection {
   is_default: boolean;
 }
 
-const EXTENSION_VERSION = '1.7.0';
+const EXTENSION_VERSION = '1.8.0';
 
 const app = document.getElementById('app')!;
 
@@ -170,7 +170,7 @@ async function extractPageMetadata(tabId: number): Promise<Metadata> {
 function renderLogin() {
   app.innerHTML = `
     <div class="header">
-      <div class="logo-wrap"><span class="logo-icon">S</span><h1 class="logo">SaveIt</h1></div>
+      <div class="logo-wrap"><img class="logo-icon" src="saveit-icon.svg" alt="SaveIt" /><h1 class="logo">SaveIt</h1></div>
       <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
     </div>
     <div class="login-form">
@@ -309,7 +309,7 @@ async function handleLogin() {
 async function loadSaveUI() {
   app.innerHTML = `
     <div class="header">
-      <div class="logo-wrap"><span class="logo-icon">S</span><h1 class="logo">SaveIt</h1></div>
+      <div class="logo-wrap"><img class="logo-icon" src="saveit-icon.svg" alt="SaveIt" /><h1 class="logo">SaveIt</h1></div>
       <div class="header-actions">
         <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
         <button id="signout-btn" class="btn-link">Sign out</button>
@@ -357,7 +357,7 @@ function renderSaveForm() {
 
   app.innerHTML = `
     <div class="header">
-      <div class="logo-wrap"><span class="logo-icon">S</span><h1 class="logo">SaveIt</h1></div>
+      <div class="logo-wrap"><img class="logo-icon" src="saveit-icon.svg" alt="SaveIt" /><h1 class="logo">SaveIt</h1></div>
       <div class="header-actions">
         <button id="website-btn" class="btn-link btn-website" title="Open SaveIt website">↗ Website</button>
         <button id="signout-btn" class="btn-link">Sign out</button>
@@ -533,7 +533,7 @@ async function handleSignOut() {
 
 async function init() {
   app.innerHTML = `
-    <div class="header"><div class="logo-wrap"><span class="logo-icon">S</span><h1 class="logo">SaveIt</h1></div></div>
+    <div class="header"><div class="logo-wrap"><img class="logo-icon" src="saveit-icon.svg" alt="SaveIt" /><h1 class="logo">SaveIt</h1></div></div>
     <div class="loading"><div class="spinner"></div><p>Loading…</p></div>
   `;
 

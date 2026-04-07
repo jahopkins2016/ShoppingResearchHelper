@@ -1,7 +1,7 @@
 {
   "name": "SaveIt",
   "description": "Save products and pages to your collections",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYzm/PeDqe01Roac6mGV2X6YHt3+J5nQrdP4zeKfKNP32Yk5PbaILCLoxahlPeUosGGHVwiPrnU4cUYwS91lls58zeCVQiczjGffPqpgsrVCadO4YGM1g4KEVSbNcnZp1ntoVHL/+l0tx2qyfMkJhkDTKVIfuKj5rTw95Q4aNqGr6fAamQ4WKpgMX833MrHL6W+5vyr8LHHwaqPb28bzKaMW0cJ8PcfztN5fMLd9PfblAdEo52HSeYdbysqeEiD0iItz3FWU0OL8yokn1pQjSANiOSLx7WQLP3Dm2C3iq/pRfd67lo+8hmpG4xKfunRdXue4X88z9sNsui9rjjV2rwIDAQAB",
   "action": {
