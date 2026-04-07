@@ -79,7 +79,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   display: flex;
   align-items: center;
@@ -257,7 +257,7 @@
 }
 
 .bubbleMine {
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
@@ -316,7 +316,7 @@
 
 .messageInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .sendBtn {
@@ -327,7 +327,7 @@
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   font-size: 16px;
   cursor: pointer;
@@ -389,7 +389,7 @@
 
 .modalInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .friendList {

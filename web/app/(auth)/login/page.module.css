@@ -13,7 +13,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(to right, #004ac6, #2563eb, #60a5fa);
+  background: linear-gradient(to right, #4F7EFF, #6B93FF, #7BA3FF);
   z-index: 50;
 }
 
@@ -33,7 +33,7 @@
   width: 64px;
   height: auto;
   margin-bottom: 16px;
-  filter: drop-shadow(0 8px 24px rgba(37, 99, 235, 0.2));
+  filter: drop-shadow(0 8px 24px rgba(79, 126, 255, 0.2));
 }
 
 .logo {
@@ -127,7 +127,7 @@
 
 .input:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .forgotRow {
@@ -148,7 +148,7 @@
 }
 
 .button {
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border: none;
   border-radius: var(--radius-full);

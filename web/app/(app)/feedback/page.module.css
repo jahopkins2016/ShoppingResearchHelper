@@ -60,7 +60,7 @@
 
 .select:focus {
   background-color: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .textarea {
@@ -81,11 +81,11 @@
 
 .textarea:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .submitBtn {
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border: none;
   border-radius: var(--radius-full);
@@ -162,8 +162,8 @@
 }
 
 .categoryFeature {
-  background: #dbe1ff;
-  color: #00174b;
+  background: #E8EEFF;
+  color: #102A6E;
 }
 
 .categoryGeneral {
@@ -188,8 +188,8 @@
 }
 
 .statusOpen {
-  background: #dbe1ff;
-  color: #004ac6;
+  background: #E8EEFF;
+  color: #4F7EFF;
 }
 
 .statusReviewed {

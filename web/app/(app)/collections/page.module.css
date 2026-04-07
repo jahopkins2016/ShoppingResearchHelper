@@ -37,7 +37,7 @@
 .createBtn {
   padding: 10px 20px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border: none;
   font-size: 14px;
@@ -201,7 +201,7 @@
 .cardNew:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: rgba(0, 74, 198, 0.03);
+  background: rgba(79, 126, 255, 0.03);
 }
 
 /* ── Empty state ── */
@@ -250,7 +250,7 @@
 
 .formInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .formActions {
@@ -276,7 +276,7 @@
 }
 
 .createButton {
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border: none;
   border-radius: var(--radius-full);
@@ -304,13 +304,13 @@
   width: 56px;
   height: 56px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   border: none;
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.3);
+  box-shadow: 0 8px 24px rgba(79, 126, 255, 0.3);
   transition: transform 0.15s;
   display: none;
 }

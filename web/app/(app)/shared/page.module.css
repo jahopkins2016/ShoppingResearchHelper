@@ -83,8 +83,8 @@
 }
 
 .badgeEditor {
-  background: rgba(0, 74, 198, 0.1);
-  color: #004ac6;
+  background: rgba(79, 126, 255, 0.1);
+  color: #4F7EFF;
 }
 
 .badgeViewer {
@@ -194,7 +194,7 @@
 
 .acceptBtn:hover:not(:disabled) {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 12px rgba(79, 126, 255, 0.25);
 }
 
 .acceptBtn:disabled {

@@ -464,7 +464,7 @@
 
 .modalInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .modalActions {

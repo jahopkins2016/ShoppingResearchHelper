@@ -76,7 +76,7 @@
 
 .searchInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .topbarRight {
@@ -120,7 +120,7 @@
 }
 
 .avatarTopbar:hover {
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 .avatarMenuWrap {
@@ -199,7 +199,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   display: flex;
   align-items: center;
@@ -444,7 +444,7 @@
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #004ac6, #2563eb);
+  background: linear-gradient(135deg, #4F7EFF, #6B93FF);
   color: #fff;
   font-size: 14px;
   font-weight: 700;

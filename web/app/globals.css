@@ -10,14 +10,14 @@
 
 :root {
   /* Primary */
-  --color-primary: #004ac6;
-  --color-primary-container: #2563eb;
-  --color-primary-hover: #003ea8;
-  --color-primary-fixed: #dbe1ff;
-  --color-on-primary-fixed: #00174b;
+  --color-primary: #4F7EFF;
+  --color-primary-container: #6B93FF;
+  --color-primary-hover: #3A6AEE;
+  --color-primary-fixed: #E8EEFF;
+  --color-on-primary-fixed: #102A6E;
 
   /* Tertiary (success / save indicator) */
-  --color-tertiary: #006242;
+  --color-tertiary: #16A34A;
 
   /* Surface system (tonal layering — purple-tinted grays) */
   --color-bg: #faf8ff;
@@ -41,7 +41,7 @@
   /* Semantic */
   --color-danger: #ba1a1a;
   --color-danger-bg: #ffdad6;
-  --color-success: #006242;
+  --color-success: #16A34A;
   --color-success-bg: #dcfce7;
 
   /* Radius — "Tactile Radius" nesting scale */

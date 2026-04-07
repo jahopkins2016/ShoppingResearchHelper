@@ -9,11 +9,11 @@
 }
 
 :root {
-  --color-primary: #004ac6;
-  --color-primary-container: #2563eb;
-  --color-primary-hover: #003ea8;
-  --color-primary-fixed: #dbe1ff;
-  --color-on-primary-fixed: #00174b;
+  --color-primary: #4F7EFF;
+  --color-primary-container: #6B93FF;
+  --color-primary-hover: #3A6AEE;
+  --color-primary-fixed: #E8EEFF;
+  --color-on-primary-fixed: #102A6E;
   --color-bg: #f8f9fa;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f3f4f5;
@@ -95,7 +95,7 @@ body {
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.2);
+  box-shadow: 0 8px 24px rgba(79, 126, 255, 0.2);
 }
 .btn-primary:hover:not(:disabled) {
   transform: scale(0.98);
@@ -193,7 +193,7 @@ input::placeholder {
 }
 input:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(79, 126, 255, 0.2);
 }
 
 /* Google sign-in button */
@@ -352,7 +352,7 @@ select {
   transition: border-color 0.15s;
 }
 select:focus {
-  border-color: rgba(37, 99, 235, 0.2);
+  border-color: rgba(79, 126, 255, 0.2);
 }
 
 .inline-actions {
