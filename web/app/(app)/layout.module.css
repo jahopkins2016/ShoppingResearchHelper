@@ -460,6 +460,14 @@
   box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
 }
 
+.versionTag {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  padding-top: 4px;
+}
+
 /* ── Main content ── */
 .main {
   flex: 1;

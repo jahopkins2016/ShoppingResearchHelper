@@ -296,15 +296,18 @@ export default function MessagesPage() {
     if (!userId) return;
 
     // Check if a conversation already exists between these two users
-    const { data: myConvos } = await supabase
+    const { data: myConvos, error: myErr } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
       .eq("user_id", userId);
 
-    const { data: friendConvos } = await supabase
+    const { data: friendConvos, error: friendErr } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
       .eq("user_id", friendId);
+
+    if (myErr) console.error("Error fetching my conversations:", myErr);
+    if (friendErr) console.error("Error fetching friend conversations:", friendErr);
 
     const mySet = new Set((myConvos ?? []).map((r) => r.conversation_id));
     const sharedConvoId = (friendConvos ?? []).find((r) =>
@@ -326,13 +329,23 @@ export default function MessagesPage() {
       .from("conversations")
       .insert({ id: newConvoId, updated_at: new Date().toISOString() });
 
-    if (convoError) return;
+    if (convoError) {
+      console.error("Error creating conversation:", convoError);
+      return;
+    }
 
     // Add both participants
-    await supabase.from("conversation_participants").insert([
-      { conversation_id: newConvoId, user_id: userId },
-      { conversation_id: newConvoId, user_id: friendId },
-    ]);
+    const { error: partError } = await supabase
+      .from("conversation_participants")
+      .insert([
+        { conversation_id: newConvoId, user_id: userId },
+        { conversation_id: newConvoId, user_id: friendId },
+      ]);
+
+    if (partError) {
+      console.error("Error adding participants:", partError);
+      return;
+    }
 
     // Refresh conversations and select the new one
     await loadConversations(userId);
