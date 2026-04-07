@@ -318,24 +318,25 @@ export default function MessagesPage() {
       return;
     }
 
-    // Create new conversation
-    const { data: newConvo, error: convoError } = await supabase
+    // Create new conversation — generate ID client-side because the
+    // SELECT RLS policy requires the user to be a participant, which
+    // hasn't been added yet at insert time.
+    const newConvoId = crypto.randomUUID();
+    const { error: convoError } = await supabase
       .from("conversations")
-      .insert({ updated_at: new Date().toISOString() })
-      .select()
-      .single();
+      .insert({ id: newConvoId, updated_at: new Date().toISOString() });
 
-    if (convoError || !newConvo) return;
+    if (convoError) return;
 
     // Add both participants
     await supabase.from("conversation_participants").insert([
-      { conversation_id: newConvo.id, user_id: userId },
-      { conversation_id: newConvo.id, user_id: friendId },
+      { conversation_id: newConvoId, user_id: userId },
+      { conversation_id: newConvoId, user_id: friendId },
     ]);
 
     // Refresh conversations and select the new one
     await loadConversations(userId);
-    setSelectedId(newConvo.id);
+    setSelectedId(newConvoId);
     setShowNewModal(false);
   }
 
