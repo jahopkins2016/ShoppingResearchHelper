@@ -100,29 +100,23 @@ export default function FriendsPage() {
     const newFriendIds = [...friendIds].filter((fid) => !existingIds.has(fid));
 
     if (newFriendIds.length > 0) {
-      // Get existing reverse entries so we don't duplicate
-      const { data: existingReverse } = await supabase
-        .from("friends")
-        .select("user_id, friend_id")
-        .in("user_id", newFriendIds)
-        .eq("friend_id", userId);
+      // Only insert forward entries (current user -> friend).
+      // Reverse entries (friend -> current user) can't be inserted from
+      // the client because RLS restricts inserts to user_id = auth.uid().
+      // The friend will get their entry when they sync from their side.
+      const rows = newFriendIds.map((fid) => ({
+        user_id: userId,
+        friend_id: fid,
+        source: "share",
+      }));
 
-      const reverseSet = new Set(
-        (existingReverse ?? []).map((r) => r.user_id)
-      );
-
-      const rows: { user_id: string; friend_id: string; source: string }[] = [];
-
-      for (const fid of newFriendIds) {
-        // Forward: current user -> friend
-        rows.push({ user_id: userId, friend_id: fid, source: "share" });
-        // Reverse: friend -> current user (if not already present)
-        if (!reverseSet.has(fid)) {
-          rows.push({ user_id: fid, friend_id: userId, source: "share" });
-        }
+      const { error } = await supabase.from("friends").insert(rows);
+      if (error) {
+        console.error("Failed to sync friends:", error);
+        setSyncing(false);
+        showToast("Failed to sync friends. Please try again.");
+        return;
       }
-
-      await supabase.from("friends").insert(rows);
     }
 
     await loadFriends(userId);
