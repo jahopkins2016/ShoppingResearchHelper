@@ -19,7 +19,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .count {
@@ -36,7 +36,7 @@
 
 .createBtn {
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-full);
   background: linear-gradient(135deg, #004ac6, #2563eb);
   color: #fff;
   border: none;
@@ -48,7 +48,7 @@
 
 .createBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+  box-shadow: var(--shadow-lifted);
 }
 
 /* ── Grid ── */
@@ -61,14 +61,14 @@
 /* ── Card ── */
 .card {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   transition: transform 0.25s, box-shadow 0.25s;
   display: block;
 }
 
 .card:hover {
-  box-shadow: 0 12px 32px rgba(0, 74, 198, 0.1);
+  box-shadow: var(--shadow-cloud);
 }
 
 .cardCover {
@@ -189,7 +189,7 @@
   gap: 12px;
   min-height: 240px;
   border: 2px dashed var(--color-outline-variant);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   background: transparent;
   color: var(--color-text-muted);
   font-size: 14px;
@@ -230,7 +230,7 @@
 .form {
   margin-bottom: 24px;
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 24px;
 }
 
@@ -262,7 +262,7 @@
 .cancelButton {
   background: var(--color-surface-container-high);
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
@@ -279,7 +279,7 @@
   background: linear-gradient(135deg, #004ac6, #2563eb);
   color: #fff;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 700;
@@ -378,13 +378,14 @@
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--color-surface-container-lowest);
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
 .sharedRow:hover {
   background: var(--color-surface-container-low);
+  box-shadow: var(--shadow-cloud);
 }
 
 .sharedRowThumb {

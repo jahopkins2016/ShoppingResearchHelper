@@ -6,12 +6,11 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
-
 /* ── Left panel: conversation list ── */
 .leftPanel {
   width: 300px;
   min-width: 300px;
-  border-right: 1px solid var(--color-surface-container);
+  background: var(--color-surface-container-low);
   display: flex;
   flex-direction: column;
 }
@@ -21,7 +20,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-surface-container);
 }
 
 .leftTitle {
@@ -62,12 +60,11 @@
   padding: 14px 16px;
   cursor: pointer;
   transition: background 0.15s;
-  border-bottom: 1px solid var(--color-surface-container-low);
   position: relative;
 }
 
 .conversationItem:hover {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container);
 }
 
 .conversationItemActive {
@@ -175,7 +172,7 @@
 
 .chatHeader {
   padding: 16px 24px;
-  border-bottom: 1px solid var(--color-surface-container);
+  background: var(--color-surface-container-low);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -298,7 +295,7 @@
 /* ── Input area ── */
 .inputArea {
   padding: 12px 24px 16px;
-  border-top: 1px solid var(--color-surface-container);
+  background: var(--color-surface-container-low);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -319,7 +316,7 @@
 
 .messageInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .sendBtn {
@@ -361,11 +358,12 @@
 }
 
 .modalContent {
-  background: var(--color-surface-container-lowest);
+  background: var(--color-surface-bright);
   border-radius: var(--radius-xl);
   padding: 28px 32px;
   width: 100%;
   max-width: 440px;
+  box-shadow: var(--shadow-cloud);
 }
 
 .modalTitle {
@@ -379,17 +377,19 @@
 .modalInput {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid var(--color-surface-container);
+  border: none;
   border-radius: var(--radius);
   font-size: 14px;
   background: var(--color-surface-container-low);
   color: var(--color-text);
   outline: none;
   box-sizing: border-box;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .modalInput:focus {
-  border-color: var(--color-primary-container);
+  background: var(--color-surface-container-lowest);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .friendList {
@@ -406,7 +406,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -442,9 +442,9 @@
 
 .modalCancel {
   padding: 8px 18px;
-  border: 1px solid var(--color-surface-container);
-  border-radius: 9999px;
-  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-high);
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -452,5 +452,5 @@
 }
 
 .modalCancel:hover {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container-highest);
 }

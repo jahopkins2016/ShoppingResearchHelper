@@ -9,7 +9,7 @@
   font-weight: 800;
   color: var(--color-text);
   text-align: center;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
   margin-bottom: 4px;
 }
 
@@ -23,7 +23,7 @@
 
 .profileCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -73,7 +73,7 @@
 
 .menuCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
@@ -127,7 +127,7 @@
 
 .inlineInput:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .inlineMsg {
@@ -140,7 +140,7 @@
   background: linear-gradient(135deg, #004ac6, #2563eb);
   color: #fff;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   padding: 10px 20px;
   font-size: 13px;
   font-weight: 700;
@@ -163,7 +163,7 @@
   background: var(--color-danger-bg);
   color: #93000a;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 16px 24px;
   font-family: var(--font-headline);
   font-size: 16px;
@@ -188,7 +188,7 @@
 /* Referral section */
 .referralCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 24px;
   text-align: center;
 }
@@ -279,5 +279,5 @@
 
 .shareButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+  box-shadow: var(--shadow-lifted);
 }

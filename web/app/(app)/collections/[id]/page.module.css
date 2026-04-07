@@ -37,7 +37,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .description {
@@ -95,18 +95,16 @@
 
 .card {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   transition: transform 0.15s, box-shadow 0.15s;
   display: flex;
   flex-direction: column;
-  border: 1px solid transparent;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-surface-container-high);
+  box-shadow: var(--shadow-cloud);
 }
 
 .imageWrap {
@@ -331,7 +329,6 @@
 .priceHistory {
   margin-top: 2px;
   padding-top: 4px;
-  border-top: 1px solid var(--color-surface-container);
 }
 
 .priceHistoryLabel {
@@ -436,11 +433,12 @@
 }
 
 .modalContent {
-  background: var(--color-surface-container-lowest);
+  background: var(--color-surface-bright);
   border-radius: var(--radius-xl);
   padding: 28px 32px;
   width: 100%;
   max-width: 440px;
+  box-shadow: var(--shadow-cloud);
 }
 
 .modalTitle {
@@ -454,17 +452,19 @@
 .modalInput {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid var(--color-surface-container);
+  border: none;
   border-radius: var(--radius);
   font-size: 14px;
   background: var(--color-surface-container-low);
   color: var(--color-text);
   outline: none;
   box-sizing: border-box;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .modalInput:focus {
-  border-color: var(--color-primary-container);
+  background: var(--color-surface-container-lowest);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .modalActions {
@@ -476,9 +476,9 @@
 
 .modalCancel {
   padding: 8px 18px;
-  border: 1px solid var(--color-surface-container);
-  border-radius: 9999px;
-  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-high);
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -486,7 +486,7 @@
 }
 
 .modalCancel:hover {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container-highest);
 }
 
 .modalSave {
@@ -516,9 +516,9 @@
   align-items: center;
   gap: 4px;
   padding: 8px 20px;
-  border: 1px solid var(--color-surface-container-high);
-  border-radius: 9999px;
-  background: var(--color-surface-container-lowest);
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-high);
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -527,7 +527,7 @@
 }
 
 .shareButton:hover {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container-highest);
 }
 
 /* Share modal extras */
@@ -591,13 +591,14 @@
 
 /* Inspect modal */
 .inspectContent {
-  background: var(--color-surface-container-lowest);
+  background: var(--color-surface-bright);
   border-radius: var(--radius-xl);
   padding: 24px;
   width: 100%;
   max-width: 640px;
   max-height: 85vh;
   overflow-y: auto;
+  box-shadow: var(--shadow-cloud);
 }
 
 .inspectHeader {
@@ -645,7 +646,7 @@
 }
 
 .inspectTable tr {
-  border-bottom: 1px solid var(--color-surface-container);
+  border-bottom: 1px solid var(--color-ghost-border);
 }
 
 .inspectTable tr:last-child {
@@ -710,7 +711,6 @@
 .inspectSection {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--color-surface-container-high);
 }
 
 .inspectSectionTitle {
@@ -800,7 +800,7 @@
 .similarCard {
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   background: var(--color-surface-container-low);
   transition: transform 0.15s, box-shadow 0.15s;
@@ -808,7 +808,7 @@
 
 .similarCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-cloud);
 }
 
 .similarImage {
@@ -878,7 +878,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   background: var(--color-surface-container-low);
   transition: background 0.15s, transform 0.15s;
 }

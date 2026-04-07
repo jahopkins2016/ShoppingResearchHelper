@@ -21,7 +21,7 @@
   border-radius: 20px;
   background: linear-gradient(135deg, #004ac6, #2563eb);
   margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.25);
+  box-shadow: var(--shadow-lifted);
 }
 
 .heroTitle {
@@ -29,7 +29,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
   margin-bottom: 10px;
 }
 
@@ -53,12 +53,12 @@
   font-weight: 700;
   text-decoration: none;
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+  box-shadow: var(--shadow-lifted);
 }
 
 .ctaBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.35);
+  box-shadow: var(--shadow-cloud);
 }
 
 .storeNote {
@@ -77,7 +77,7 @@
 
 .featureCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 24px 20px;
 }
 

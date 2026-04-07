@@ -19,7 +19,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .count {
@@ -33,10 +33,10 @@
   align-items: center;
   gap: 6px;
   padding: 10px 20px;
-  border-radius: 12px;
-  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-high);
   color: var(--color-text);
-  border: 1px solid var(--color-outline-variant);
+  border: none;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -44,9 +44,9 @@
 }
 
 .syncBtn:hover {
-  background: var(--color-surface-container-low);
+  background: var(--color-surface-container-highest);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-cloud);
 }
 
 .syncBtn:disabled {
@@ -119,7 +119,7 @@
 /* ── Card ── */
 .card {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -130,7 +130,7 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-cloud);
 }
 
 /* ── Avatar ── */
@@ -228,7 +228,7 @@
 
 .messageBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 74, 198, 0.25);
+  box-shadow: var(--shadow-lifted);
 }
 
 .removeBtn {

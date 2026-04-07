@@ -8,7 +8,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
   margin-bottom: 4px;
 }
 
@@ -22,7 +22,7 @@
 /* ── Form ── */
 .formCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 24px;
   margin-bottom: 40px;
 }
@@ -60,7 +60,7 @@
 
 .select:focus {
   background-color: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .textarea {
@@ -81,14 +81,14 @@
 
 .textarea:focus {
   background: var(--color-surface-container-lowest);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .submitBtn {
   background: linear-gradient(135deg, #004ac6, #2563eb);
   color: #fff;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   padding: 12px 28px;
   font-size: 14px;
   font-weight: 700;
@@ -98,7 +98,7 @@
 
 .submitBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 74, 198, 0.3);
+  box-shadow: var(--shadow-lifted);
 }
 
 .submitBtn:disabled {
@@ -134,7 +134,7 @@
 
 .feedbackCard {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 20px;
 }
 
@@ -183,7 +183,7 @@
   font-weight: 700;
   letter-spacing: 0.3px;
   padding: 3px 10px;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   margin-left: auto;
 }
 

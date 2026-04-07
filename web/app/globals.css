@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 *,
 *::before,
@@ -16,35 +16,48 @@
   --color-primary-fixed: #dbe1ff;
   --color-on-primary-fixed: #00174b;
 
-  /* Surface system (tonal layering) */
-  --color-bg: #f8f9fa;
-  --color-surface: #f8f9fa;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f3f4f5;
-  --color-surface-container: #edeeef;
-  --color-surface-container-high: #e7e8e9;
-  --color-surface-container-highest: #e1e3e4;
+  /* Tertiary (success / save indicator) */
+  --color-tertiary: #006242;
 
-  /* Text */
-  --color-text: #191c1d;
+  /* Surface system (tonal layering — purple-tinted grays) */
+  --color-bg: #faf8ff;
+  --color-surface: #faf8ff;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3fe;
+  --color-surface-container: #ededf9;
+  --color-surface-container-high: #e7e7f3;
+  --color-surface-container-highest: #e1e1ed;
+
+  /* Text — never use pure #000 */
+  --color-text: #191b23;
   --color-text-secondary: #434655;
   --color-text-muted: #737686;
   --color-outline-variant: #c3c6d7;
 
+  /* Ghost border (outline-variant at 15% opacity) */
+  --color-ghost-border: rgba(195, 198, 215, 0.15);
+
   /* Semantic */
   --color-danger: #ba1a1a;
   --color-danger-bg: #ffdad6;
-  --color-success: #16a34a;
+  --color-success: #006242;
   --color-success-bg: #dcfce7;
 
-  /* Radius */
+  /* Radius — "Tactile Radius" nesting scale */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
   --radius: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Fonts */
+  /* Elevation — Cloud Shadows */
+  --shadow-cloud: 0 12px 40px rgba(25, 27, 35, 0.06);
+  --shadow-lifted: 0 8px 24px rgba(25, 27, 35, 0.08);
+
+  /* Fonts — Manrope across all scales */
   --font-headline: 'Manrope', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'Manrope', sans-serif;
 }
 
 html,
@@ -54,6 +67,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
 a {

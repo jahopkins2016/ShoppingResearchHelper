@@ -19,7 +19,7 @@
   font-size: 28px;
   font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .count {
@@ -62,13 +62,12 @@
 /* ── Card ── */
 .card {
   background: var(--color-surface-container-lowest);
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   transition: transform 0.15s, box-shadow 0.15s;
-  border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
@@ -76,8 +75,7 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-surface-container-high);
+  box-shadow: var(--shadow-cloud);
 }
 
 .cardName {
