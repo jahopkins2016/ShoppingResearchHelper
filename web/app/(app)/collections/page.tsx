@@ -12,6 +12,7 @@ export default async function CollectionsPage() {
   const { data: collections } = await supabase
     .from("collections")
     .select("*")
+    .eq("user_id", user!.id)
     .order("sort_order", { ascending: true });
 
   // Fetch cover image for each collection (first item with an image)
