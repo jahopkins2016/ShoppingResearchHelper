@@ -70,7 +70,7 @@ export default function CollectionsList({
     } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("collections")
-      .insert({ name: name.trim(), user_id: user?.id })
+      .insert({ name: name.trim(), user_id: user?.id, is_public: true })
       .select()
       .single();
 
@@ -83,10 +83,26 @@ export default function CollectionsList({
     router.refresh();
   }
 
+  async function handleTogglePublic(e: React.MouseEvent, collection: Collection) {
+    e.preventDefault();
+    e.stopPropagation();
+    const newPublic = !collection.is_public;
+    setCollections((prev) =>
+      prev.map((c) => (c.id === collection.id ? { ...c, is_public: newPublic } : c))
+    );
+    await supabase
+      .from("collections")
+      .update({ is_public: newPublic })
+      .eq("id", collection.id);
+    router.refresh();
+  }
+
   async function handleShare(e: React.MouseEvent, collection: Collection) {
     e.preventDefault();
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/collections/${collection.id}`;
+    const shareUrl = collection.is_public
+      ? `${window.location.origin}/c/${collection.id}`
+      : `${window.location.origin}/collections/${collection.id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -230,6 +246,18 @@ export default function CollectionsList({
                     </div>
                   </div>
                   <div className={styles.cardActions}>
+                  <button
+                    className={`${styles.visibilityBtn} ${c.is_public ? styles.visibilityBtnPublic : ''}`}
+                    onClick={(e) => handleTogglePublic(e, c)}
+                    aria-label={c.is_public ? 'Make private' : 'Make public'}
+                    title={c.is_public ? 'Public — click to make private' : 'Private — click to make public'}
+                  >
+                    {c.is_public ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    )}
+                  </button>
                   <button
                     className={`${styles.pinBtn} ${pinnedSet.has(c.id) ? styles.pinBtnActive : ''}`}
                     onClick={(e) => handleTogglePin(e, c)}

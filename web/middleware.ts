@@ -30,12 +30,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to /login (except if already on /login or /auth/callback or /join)
+  // Redirect unauthenticated users to /login (except public routes)
   if (
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth/callback") &&
-    !request.nextUrl.pathname.startsWith("/join")
+    !request.nextUrl.pathname.startsWith("/join") &&
+    !request.nextUrl.pathname.startsWith("/collections/public") &&
+    !request.nextUrl.pathname.startsWith("/c/")
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
