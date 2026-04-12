@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -23,16 +22,7 @@ export default async function JoinPage({
       redirect("/shared");
     }
 
-    // Not logged in — store share_id in a cookie and prompt login
-    const cookieStore = await cookies();
-    cookieStore.set("saveit_share_id", share_id, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-      httpOnly: true,
-      sameSite: "lax",
-    });
-
-    // Fetch share details for the invite display
+    // Not logged in — cookie is set by middleware; fetch share details for display
     // Use a new client since user isn't logged in — share info from public join context
     const { data: share } = await supabase
       .from("collection_shares")
@@ -87,20 +77,13 @@ export default async function JoinPage({
     redirect("/login");
   }
 
+  // Cookie is set by middleware; fetch referrer name for display
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("display_name")
     .eq("referral_code", ref)
     .single();
-
-  const cookieStore = await cookies();
-  cookieStore.set("saveit_ref", ref, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    httpOnly: true,
-    sameSite: "lax",
-  });
 
   const inviterName = profile?.display_name;
 

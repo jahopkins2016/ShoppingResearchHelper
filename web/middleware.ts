@@ -51,6 +51,31 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Persist referral and share-invite params as cookies on /join
+  // (cookies cannot be set inside Server Components in Next.js 15)
+  if (request.nextUrl.pathname === "/join") {
+    const ref = request.nextUrl.searchParams.get("ref");
+    const shareId = request.nextUrl.searchParams.get("share_id");
+
+    if (ref) {
+      supabaseResponse.cookies.set("saveit_ref", ref, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+
+    if (shareId) {
+      supabaseResponse.cookies.set("saveit_share_id", shareId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+  }
+
   return supabaseResponse;
 }
 
