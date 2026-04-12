@@ -1,0 +1,46 @@
+name: saveit
+description: SaveIt — cross-platform product bookmarking app
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Supabase
+  supabase_flutter: ^2.8.4
+
+  # Navigation
+  go_router: ^14.6.3
+
+  # State management
+  provider: ^6.1.5
+
+  # Images
+  cached_network_image: ^3.4.1
+
+  # URL handling
+  url_launcher: ^6.3.1
+
+  # Native share sheet
+  share_plus: ^10.1.4
+
+  # Google Sign-In
+  google_sign_in: ^6.2.2
+
+  # Relative timestamps
+  timeago: ^3.7.0
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
