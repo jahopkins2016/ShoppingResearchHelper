@@ -28,17 +28,31 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final userId = context.read<AuthProvider>().userId;
-    if (userId == null) return;
-
-    final data = await _supabase
-        .from('friends')
-        .select('*, profiles!friends_friend_user_id_fkey(id, display_name, avatar_url, email)')
-        .eq('user_id', userId);
-    if (!mounted) return;
-    setState(() {
-      _friends = List<Map<String, dynamic>>.from(data);
-      _loading = false;
-    });
+    if (userId == null) {
+      setState(() {
+        _friends = [];
+        _loading = false;
+      });
+      return;
+    }
+    try {
+      final data = await _supabase
+          .from('friends')
+          .select('*, profiles!friends_friend_user_id_fkey(id, display_name, avatar_url, email)')
+          .eq('user_id', userId);
+      if (!mounted) return;
+      setState(() {
+        _friends = List<Map<String, dynamic>>.from(data);
+        _loading = false;
+      });
+    } catch (e, st) {
+      debugPrint('Error loading friends: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        _friends = [];
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _syncFriends() async {
@@ -154,76 +168,81 @@ class _FriendsScreenState extends State<FriendsScreen> {
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primary))
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: _friends.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.people_outline,
-                              size: 56, color: AppTheme.textSecondary),
-                          const SizedBox(height: 16),
-                          Text('No friends yet',
-                              style:
-                                  Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          Text(
-                              'Tap sync to add friends from\nyour shared collections',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: _syncFriends,
-                            icon: const Icon(Icons.sync),
-                            label: const Text('Sync Friends'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _friends.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 4),
-                      itemBuilder: (_, i) {
-                        final profile = _friends[i]['profiles']
-                            as Map<String, dynamic>?;
-                        final name = profile?['display_name'] ??
-                            profile?['email'] ??
-                            'Unknown';
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 0, vertical: 4),
-                          leading: _Avatar(name: name),
-                          title: Text(name,
-                              style:
-                                  Theme.of(context).textTheme.titleSmall),
-                          subtitle:
-                              Text(profile?['email'] ?? ''),
-                          trailing: Row(
+          : (context.read<AuthProvider>().userId == null
+              ? Center(
+                  child: Text('You must be logged in to see friends.',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                )
+              : RefreshIndicator(
+                  onRefresh: _load,
+                  child: _friends.isEmpty
+                      ? Center(
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(
-                                    Icons.chat_bubble_outline,
-                                    color: AppTheme.primary),
-                                onPressed: () =>
-                                    _message(profile ?? {}),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                    Icons.person_remove_outlined,
-                                    color: AppTheme.danger),
-                                onPressed: () => _removeFriend(
-                                    profile?['id'] ?? ''),
+                              const Icon(Icons.people_outline,
+                                  size: 56, color: AppTheme.textSecondary),
+                              const SizedBox(height: 16),
+                              Text('No friends yet',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'Tap sync to add friends from\nyour shared collections',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: _syncFriends,
+                                icon: const Icon(Icons.sync),
+                                label: const Text('Sync Friends'),
                               ),
                             ],
                           ),
-                        );
-                      },
-                    ),
-            ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _friends.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 4),
+                          itemBuilder: (_, i) {
+                            final profile = _friends[i]['profiles']
+                                as Map<String, dynamic>?;
+                            final name = profile?['display_name'] ??
+                                profile?['email'] ??
+                                'Unknown';
+                            return ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 0, vertical: 4),
+                              leading: _Avatar(name: name),
+                              title: Text(name,
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
+                              subtitle:
+                                  Text(profile?['email'] ?? ''),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.chat_bubble_outline,
+                                        color: AppTheme.primary),
+                                    onPressed: () =>
+                                        _message(profile ?? {}),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.person_remove_outlined,
+                                        color: AppTheme.danger),
+                                    onPressed: () => _removeFriend(
+                                        profile?['id'] ?? ''),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                )),
     );
   }
 }

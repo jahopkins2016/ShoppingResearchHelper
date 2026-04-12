@@ -82,6 +82,31 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
       list = list.take(10).toList();
     }
 
+    // Fetch thumbnail images for each collection
+    final collectionIds = list.map((c) => c['id']).toList();
+    if (collectionIds.isNotEmpty) {
+      final thumbs = await _supabase
+          .from('items')
+          .select('collection_id, image_url')
+          .inFilter('collection_id', collectionIds)
+          .not('image_url', 'is', null)
+          .limit(4 * collectionIds.length);
+
+      final thumbMap = <String, List<String>>{};
+      for (final t in thumbs) {
+        final cid = t['collection_id'] as String;
+        final url = t['image_url'] as String?;
+        if (url != null && url.isNotEmpty) {
+          thumbMap.putIfAbsent(cid, () => []);
+          if (thumbMap[cid]!.length < 4) thumbMap[cid]!.add(url);
+        }
+      }
+
+      for (final c in list) {
+        c['_thumbnails'] = thumbMap[c['id']] ?? [];
+      }
+    }
+
     setState(() {
       _collections = list;
       _loading = false;
