@@ -1,7 +1,7 @@
 name: saveit
 description: SaveIt — cross-platform product bookmarking app
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -27,6 +27,9 @@ dependencies:
 
   # Native share sheet
   share_plus: ^10.1.4
+
+  # Receive shared content from other apps
+  receive_sharing_intent: ^1.8.1
 
   # Google Sign-In
   google_sign_in: ^6.2.2

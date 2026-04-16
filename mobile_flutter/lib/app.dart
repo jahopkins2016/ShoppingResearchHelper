@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'core/providers/auth_provider.dart';
+import 'core/services/share_intent_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
 import 'features/collections/collections_screen.dart';
 import 'features/collections/collection_detail_screen.dart';
+import 'features/collections/widgets/share_collection_picker.dart';
 import 'features/shared/shared_screen.dart';
 import 'features/friends/friends_screen.dart';
 import 'features/messages/messages_screen.dart';
@@ -21,14 +25,53 @@ import 'features/settings/privacy_screen.dart';
 import 'features/settings/help_screen.dart';
 import 'main_shell.dart';
 
-class SaveItApp extends StatelessWidget {
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+class SaveItApp extends StatefulWidget {
   const SaveItApp({super.key});
+
+  @override
+  State<SaveItApp> createState() => _SaveItAppState();
+}
+
+class _SaveItAppState extends State<SaveItApp> {
+  StreamSubscription? _shareSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _shareSub = ShareIntentService().sharedUrls.listen(_onSharedUrl);
+  }
+
+  @override
+  void dispose() {
+    _shareSub?.cancel();
+    super.dispose();
+  }
+
+  void _onSharedUrl(String url) {
+    final navContext = _rootNavigatorKey.currentContext;
+    if (navContext == null) return;
+
+    final authProvider = context.read<AuthProvider>();
+    if (!authProvider.isAuthenticated) return;
+
+    ShareIntentService().clearPending();
+
+    showModalBottomSheet(
+      context: navContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ShareCollectionPicker(sharedUrl: url),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
     final router = GoRouter(
+      navigatorKey: _rootNavigatorKey,
       refreshListenable: authProvider,
       initialLocation: '/collections',
       redirect: (context, state) {
@@ -136,5 +179,3 @@ class SaveItApp extends StatelessWidget {
     );
   }
 }
-
-
