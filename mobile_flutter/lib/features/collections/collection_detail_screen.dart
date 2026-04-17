@@ -69,11 +69,20 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
   }
 
   void _retryStaleEnrichments(List<Map<String, dynamic>> items) {
-    final cutoff =
-        DateTime.now().subtract(const Duration(seconds: 30)).toIso8601String();
+    final now = DateTime.now();
+    final pendingCutoff =
+        now.subtract(const Duration(seconds: 30)).toIso8601String();
+    final failedCutoff =
+        now.subtract(const Duration(minutes: 5)).toIso8601String();
     for (final item in items) {
-      if (item['enrichment_status'] == 'pending' &&
-          (item['created_at'] as String).compareTo(cutoff) < 0) {
+      final status = item['enrichment_status'];
+      final shouldRetry = (status == 'pending' &&
+              (item['created_at'] as String).compareTo(pendingCutoff) < 0) ||
+          (status == 'failed' &&
+              ((item['updated_at'] ?? item['created_at']) as String)
+                      .compareTo(failedCutoff) <
+                  0);
+      if (shouldRetry) {
         _supabase.functions.invoke('enrich-item',
             body: {'item_id': item['id']});
       }

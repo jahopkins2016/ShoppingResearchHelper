@@ -19,7 +19,9 @@ class CollectionCard extends StatelessWidget {
     final name = collection['name'] as String? ?? 'Untitled';
     final isPublic = collection['is_public'] as bool? ?? false;
     final items = collection['items'] as List? ?? [];
-    final itemCount = items.length;
+    final itemCount = items.isNotEmpty && items.first is Map
+        ? (items.first['count'] as int? ?? 0)
+        : items.length;
     final imageUrls = _getImageUrls();
 
     return GestureDetector(
