@@ -17,6 +17,24 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // Force all subprojects (including third-party Flutter plugins) to compile
+    // Java and Kotlin against JVM 17, matching the app module. Without this,
+    // older plugins like receive_sharing_intent default to JVM 1.8 for Java
+    // while Kotlin is 17, which AGP 8+ rejects as inconsistent.
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.gradle.LibraryExtension> {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = "17"
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
