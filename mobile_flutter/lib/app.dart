@@ -36,6 +36,7 @@ class SaveItApp extends StatefulWidget {
 
 class _SaveItAppState extends State<SaveItApp> {
   StreamSubscription? _shareSub;
+  AuthProvider? _authProvider;
 
   @override
   void initState() {
@@ -44,17 +45,46 @@ class _SaveItAppState extends State<SaveItApp> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.read<AuthProvider>();
+    if (_authProvider != auth) {
+      _authProvider?.removeListener(_onAuthChanged);
+      _authProvider = auth;
+      _authProvider!.addListener(_onAuthChanged);
+    }
+    // Cold-start case: a URL may have been captured before we subscribed
+    // to the broadcast stream. Check the pending buffer once the frame is up.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryShowPending());
+  }
+
+  @override
   void dispose() {
+    _authProvider?.removeListener(_onAuthChanged);
     _shareSub?.cancel();
     super.dispose();
   }
 
+  void _onAuthChanged() {
+    if (_authProvider?.isAuthenticated ?? false) {
+      // Auth just came online — retry any URL we buffered while unauthenticated.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _tryShowPending());
+    }
+  }
+
+  void _tryShowPending() {
+    final pending = ShareIntentService().pendingUrl;
+    if (pending != null) _onSharedUrl(pending);
+  }
+
   void _onSharedUrl(String url) {
+    // If we're not authenticated yet, leave the URL buffered; _onAuthChanged
+    // will retry once the user signs in.
+    final authProvider = _authProvider ?? context.read<AuthProvider>();
+    if (!authProvider.isAuthenticated) return;
+
     final navContext = _rootNavigatorKey.currentContext;
     if (navContext == null) return;
-
-    final authProvider = context.read<AuthProvider>();
-    if (!authProvider.isAuthenticated) return;
 
     ShareIntentService().clearPending();
 

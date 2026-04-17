@@ -142,7 +142,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: _signOut,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+          const Center(
+            child: Text(
+              'v1.1.0-ci',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );

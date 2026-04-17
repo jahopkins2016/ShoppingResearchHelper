@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SaveIt (Android)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=SUPABASE_URL=https://fvzcsnphxrewvpvuqamt.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs"
+      ]
+    }
+  ]
+}

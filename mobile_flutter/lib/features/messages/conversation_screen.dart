@@ -92,7 +92,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
             if (newMsg['sender_id'] != userId) {
               _supabase
                   .from('messages')
-                  .update({'is_read': true}).eq('id', newMsg['id'] as String);
+                  .update({'read_at': DateTime.now().toIso8601String()}).eq('id', newMsg['id'] as String);
             }
           },
         )
@@ -102,7 +102,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   void _markAsRead(String userId) {
     _supabase
         .from('messages')
-        .update({'is_read': true})
+        .update({'read_at': DateTime.now().toIso8601String()})
         .eq('conversation_id', widget.id)
         .neq('sender_id', userId);
   }
@@ -132,10 +132,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         'conversation_id': widget.id,
         'sender_id': userId,
         'body': text,
-        'is_read': false,
       });
       await _supabase.from('conversations').update({
-        'last_message': text,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', widget.id);
     } finally {

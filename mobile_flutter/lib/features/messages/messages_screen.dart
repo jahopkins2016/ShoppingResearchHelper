@@ -30,34 +30,60 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final userId = context.read<AuthProvider>().userId;
     if (userId == null) return;
 
-    final data = await _supabase
-        .from('conversation_participants')
-        .select('conversation_id, conversations(id, last_message, updated_at, conversation_participants(user_id, profiles(id, display_name, avatar_url, email)))')
-        .eq('user_id', userId)
-        .order('conversation_id');
+    try {
+      final data = await _supabase
+          .from('conversation_participants')
+          .select('conversation_id, conversations(id, updated_at, conversation_participants(user_id, profiles(id, display_name, avatar_url, email)))')
+          .eq('user_id', userId)
+          .order('conversation_id');
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final convs = <Map<String, dynamic>>[];
-    for (final row in data as List) {
-      final conv =
-          row['conversations'] as Map<String, dynamic>? ?? {};
-      final participants =
-          conv['conversation_participants'] as List? ?? [];
-      final other = participants.firstWhere(
-        (p) => (p as Map)['user_id'] != userId,
-        orElse: () => null,
-      );
-      convs.add({...conv, 'other_profile': (other as Map?)?['profiles']});
+      final convs = <Map<String, dynamic>>[];
+      for (final row in data as List) {
+        final conv =
+            row['conversations'] as Map<String, dynamic>? ?? {};
+        final participants =
+            conv['conversation_participants'] as List? ?? [];
+        final other = participants.firstWhere(
+          (p) => (p as Map)['user_id'] != userId,
+          orElse: () => null,
+        );
+
+        // Fetch latest message for this conversation
+        String lastMessage = '';
+        final convId = conv['id'];
+        if (convId != null) {
+          final msgData = await _supabase
+              .from('messages')
+              .select('body')
+              .eq('conversation_id', convId as String)
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+          lastMessage = (msgData?['body'] as String?) ?? '';
+        }
+
+        convs.add({
+          ...conv,
+          'last_message': lastMessage,
+          'other_profile': (other as Map?)?['profiles'],
+        });
+      }
+      convs.sort((a, b) =>
+          (b['updated_at'] as String? ?? '')
+              .compareTo(a['updated_at'] as String? ?? ''));
+
+      if (!mounted) return;
+      setState(() {
+        _conversations = convs;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      debugPrint('Messages load error: $e');
     }
-    convs.sort((a, b) =>
-        (b['updated_at'] as String? ?? '')
-            .compareTo(a['updated_at'] as String? ?? ''));
-
-    setState(() {
-      _conversations = convs;
-      _loading = false;
-    });
   }
 
   @override

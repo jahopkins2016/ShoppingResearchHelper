@@ -58,7 +58,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId:
+            '299785436483-c29cu4h80n6hpomhs5ue6k9p4dlnjua3.apps.googleusercontent.com',
+      );
+      // Clear any cached account so the user always sees the account picker
+      // and can switch Google accounts between sign-ins.
+      await googleSignIn.signOut();
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         setState(() => _loading = false);
@@ -209,6 +215,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+              const Center(
+                child: Text(
+                  'v1.1.0-ci',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
               ),
             ],
           ),
