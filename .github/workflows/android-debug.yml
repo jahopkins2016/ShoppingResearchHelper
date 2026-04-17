@@ -45,8 +45,11 @@ jobs:
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
         run: |
-          mkdir -p $HOME/.android
-          echo "$KEYSTORE_B64" | base64 -d > $HOME/.android/debug.keystore
+          mkdir -p "$HOME/.android"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+          echo "Keystore size: $(stat -c%s "$HOME/.android/debug.keystore") bytes"
+          keytool -list -keystore "$HOME/.android/debug.keystore" \
+            -storepass android -alias androiddebugkey | grep -i "SHA1\|SHA-1" || true
         working-directory: ${{ github.workspace }}
 
       - name: Build debug APK (arm64)
