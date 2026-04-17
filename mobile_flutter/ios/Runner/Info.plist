@@ -78,6 +78,16 @@
 			<key>CFBundleURLName</key>
 			<string>com.saveit.saveit</string>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.299785436483-u4ljnu08picdv7il1a84diesh1ln3fn4</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>google</string>
+		</dict>
 	</array>
 	<key>AppGroupId</key>
 	<string>group.com.saveit.saveit</string>
