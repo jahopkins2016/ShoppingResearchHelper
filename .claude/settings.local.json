@@ -159,7 +159,12 @@
       "Bash(git commit -m ' *)",
       "Bash(gh auth *)",
       "Bash(gh secret *)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(where magick *)",
+      "Bash(where convert *)",
+      "Bash(where inkscape *)",
+      "Bash(node -e \"console.log\\(require\\('sharp'\\).versions\\)\")",
+      "Bash(node src/generate-android-icons.js)"
     ]
   }
 }
