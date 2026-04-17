@@ -37,6 +37,18 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Restore debug keystore
+        # Use Jason's local debug keystore so the resulting APK's SHA-1 matches
+        # the one registered in Google Cloud Console for Android OAuth. Without
+        # this the runner would auto-generate a fresh debug keystore per build
+        # and Google Sign-In would fail with ApiException: 10.
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p $HOME/.android
+          echo "$KEYSTORE_B64" | base64 -d > $HOME/.android/debug.keystore
+        working-directory: ${{ github.workspace }}
+
       - name: Build debug APK (arm64)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
