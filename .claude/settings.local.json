@@ -155,7 +155,11 @@
       "Bash(wsl.exe --list --verbose)",
       "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew.bat --no-daemon --max-workers=1 --no-parallel help)",
       "Bash(./gradlew.bat --stop)",
-      "Bash(./gradlew.bat help *)"
+      "Bash(./gradlew.bat help *)",
+      "Bash(git commit -m ' *)",
+      "Bash(gh auth *)",
+      "Bash(gh secret *)",
+      "Bash(gh run *)"
     ]
   }
 }
