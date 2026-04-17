@@ -30,6 +30,21 @@ android {
         versionName = flutter.versionName
     }
 
+    // Pin the debug signing config to a known keystore location. AGP's default
+    // auto-generates a fresh keystore in various locations, producing a
+    // different SHA-1 per build — which breaks Google Sign-In (bound to the
+    // Android OAuth client's registered SHA-1). Setting this ensures every
+    // debug build is signed with the keystore we place at this path in CI
+    // (and locally, the same path via `keytool` or Android Studio default).
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
