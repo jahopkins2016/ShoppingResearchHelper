@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AppGroupId</key>
-	<string>group.com.saveit.app</string>
+	<string>group.com.saveit.saveit</string>
 	<key>CFBundleDisplayName</key>
 	<string>SaveIt</string>
 	<key>CFBundleExecutable</key>

@@ -12,14 +12,22 @@ class ShareCollectionPicker extends StatefulWidget {
 
 class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
   final _supabase = Supabase.instance.client;
+  final _newNameCtrl = TextEditingController();
   List<Map<String, dynamic>> _collections = [];
   bool _loading = true;
   bool _saving = false;
+  bool _creatingNew = false;
 
   @override
   void initState() {
     super.initState();
     _loadCollections();
+  }
+
+  @override
+  void dispose() {
+    _newNameCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCollections() async {
@@ -68,14 +76,42 @@ class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
     }
   }
 
+  Future<void> _createAndSave() async {
+    final name = _newNameCtrl.text.trim();
+    if (name.isEmpty) return;
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+    setState(() => _saving = true);
+    try {
+      final newCollection = await _supabase
+          .from('collections')
+          .insert({
+            'user_id': user.id,
+            'name': name,
+            'is_public': false,
+          })
+          .select()
+          .single();
+      await _saveToCollection(newCollection['id'] as String);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create collection: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -116,13 +152,18 @@ class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
             ),
           ),
           const SizedBox(height: 16),
+          if (_creatingNew) _buildNewCollectionRow() else _buildNewCollectionTile(),
+          const Divider(height: 1),
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            )
           else if (_collections.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'No collections yet. Create one first!',
+                'No collections yet — create one above.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -157,6 +198,61 @@ class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
                 },
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewCollectionTile() {
+    return ListTile(
+      leading: const Icon(Icons.create_new_folder_outlined,
+          color: AppTheme.primary),
+      title: const Text('Create new collection'),
+      onTap: _saving ? null : () => setState(() => _creatingNew = true),
+    );
+  }
+
+  Widget _buildNewCollectionRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.create_new_folder_outlined,
+              color: AppTheme.primary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextField(
+              controller: _newNameCtrl,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                hintText: 'Collection name',
+                isDense: true,
+              ),
+              onSubmitted: (_) => _createAndSave(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: _saving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check_circle, color: AppTheme.primary),
+            onPressed: _saving ? null : _createAndSave,
+            tooltip: 'Create and save',
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: _saving
+                ? null
+                : () => setState(() {
+                      _creatingNew = false;
+                      _newNameCtrl.clear();
+                    }),
+          ),
         ],
       ),
     );

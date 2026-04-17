@@ -145,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           const Center(
             child: Text(
-              'v1.1.1-ci',
+              'v1.2.0-ci',
               style: TextStyle(
                 fontSize: 11,
                 color: AppTheme.textSecondary,
