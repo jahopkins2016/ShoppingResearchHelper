@@ -18,7 +18,7 @@ export default function PublicLayout({
         }}
       >
         <Link
-          href="/collections/public"
+          href="/login"
           style={{
             fontFamily: "var(--font-headline)",
             fontSize: "20px",

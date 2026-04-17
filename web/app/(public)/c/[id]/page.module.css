@@ -1,21 +1,5 @@
 /* ── Public Collection Detail ── */
 
-.back {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 16px;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.back:hover {
-  color: var(--color-text);
-}
-
 .header {
   margin-bottom: 32px;
 }

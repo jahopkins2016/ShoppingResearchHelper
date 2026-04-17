@@ -32,10 +32,6 @@ export default async function PublicCollectionDetailPage({
 
   return (
     <>
-      <Link href="/collections/public" className={styles.back}>
-        ← Browse Collections
-      </Link>
-
       <div className={styles.header}>
         <p className={styles.collectionLabel}>Public Collection</p>
         <div className={styles.headerRow}>
