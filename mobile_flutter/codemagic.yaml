@@ -8,7 +8,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.saveit.app
+        bundle_identifier: com.jahopkins.saveit
       groups:
         - saveit_env  # Environment variable group in Codemagic containing SUPABASE_URL and SUPABASE_ANON_KEY
       flutter: stable
