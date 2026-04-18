@@ -11,7 +11,6 @@ workflows:
         - saveit_env  # Environment variable group in Codemagic containing SUPABASE_URL and SUPABASE_ANON_KEY
       vars:
         BUNDLE_ID: "com.jahopkins.saveit"
-        APP_STORE_APPLE_ID: ""  # optional; leave empty
       flutter: stable
       xcode: latest
       cocoapods: default
