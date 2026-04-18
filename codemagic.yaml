@@ -7,11 +7,11 @@ workflows:
     integrations:
       app_store_connect: Codemagic  # Name of your App Store Connect API key in Codemagic
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.jahopkins.saveit
       groups:
         - saveit_env  # Environment variable group in Codemagic containing SUPABASE_URL and SUPABASE_ANON_KEY
+      vars:
+        BUNDLE_ID: "com.jahopkins.saveit"
+        APP_STORE_APPLE_ID: ""  # optional; leave empty
       flutter: stable
       xcode: latest
       cocoapods: default
