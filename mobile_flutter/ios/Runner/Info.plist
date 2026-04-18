@@ -76,7 +76,7 @@
 				<string>saveit</string>
 			</array>
 			<key>CFBundleURLName</key>
-			<string>com.saveit.saveit</string>
+			<string>com.saveit.app</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeRole</key>
