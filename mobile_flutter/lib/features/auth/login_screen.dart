@@ -99,13 +99,18 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-      const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-      if (supabaseUrl.isEmpty) {
-        throw Exception('Supabase URL not configured');
+      // Derive Supabase URL + anon key from the already-initialized client
+      // so this works regardless of how dart-defines were passed.
+      final restUrl = _supabase.rest.url;
+      final baseUrl = restUrl.replaceFirst(RegExp(r'/rest/v\d+/?$'), '');
+      final anonKey = _supabase.headers['apikey'] ??
+          _supabase.headers['Authorization']?.replaceFirst('Bearer ', '') ??
+          '';
+      if (baseUrl.isEmpty || !baseUrl.startsWith('http')) {
+        throw Exception('Supabase URL not available from client');
       }
       final res = await http.post(
-        Uri.parse('$supabaseUrl/auth/v1/recover'),
+        Uri.parse('$baseUrl/auth/v1/recover'),
         headers: {
           'Content-Type': 'application/json',
           'apikey': anonKey,
@@ -320,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.3.1-ci',
+                  'v1.3.2-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
