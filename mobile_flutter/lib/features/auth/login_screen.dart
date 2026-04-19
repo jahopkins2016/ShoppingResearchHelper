@@ -145,26 +145,32 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize(
         clientId:
             '299785436483-u4ljnu08picdv7il1a84diesh1ln3fn4.apps.googleusercontent.com',
         serverClientId:
             '299785436483-c29cu4h80n6hpomhs5ue6k9p4dlnjua3.apps.googleusercontent.com',
       );
-      // Clear any cached account so the user always sees the account picker
-      // and can switch Google accounts between sign-ins.
+      // Ensure a fresh account picker every time so the user can switch
+      // Google accounts between sign-ins.
       await googleSignIn.signOut();
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _loading = false);
-        return;
+
+      final googleUser = await googleSignIn.authenticate();
+      final idToken = googleUser.authentication.idToken;
+      if (idToken == null) {
+        throw const AuthException('Google did not return an ID token.');
       }
-      final googleAuth = await googleUser.authentication;
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
-        idToken: googleAuth.idToken!,
-        accessToken: googleAuth.accessToken,
+        idToken: idToken,
       );
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        // User dismissed the picker — no error to show.
+      } else {
+        setState(() => _error = e.description ?? e.code.name);
+      }
     } on AuthException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
@@ -325,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.3.6-ci',
+                  'v1.3.7-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
