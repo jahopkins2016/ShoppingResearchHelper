@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -96,14 +99,34 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      await _supabase.auth.resetPasswordForEmail(email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset link sent to $email')),
-        );
+      const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+      const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+      if (supabaseUrl.isEmpty) {
+        throw Exception('Supabase URL not configured');
       }
-    } on AuthException catch (e) {
-      setState(() => _error = e.message);
+      final res = await http.post(
+        Uri.parse('$supabaseUrl/auth/v1/recover'),
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': 'Bearer $anonKey',
+        },
+        body: jsonEncode({'email': email}),
+      );
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Password reset link sent to $email')),
+          );
+        }
+      } else {
+        String msg = 'Failed to send reset link';
+        try {
+          final body = jsonDecode(res.body) as Map<String, dynamic>;
+          msg = (body['msg'] ?? body['error_description'] ?? body['error'] ?? msg).toString();
+        } catch (_) {}
+        setState(() => _error = msg);
+      }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -297,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.3.0-ci',
+                  'v1.3.1-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
