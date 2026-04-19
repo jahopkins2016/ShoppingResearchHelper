@@ -186,6 +186,9 @@ Deno.serve(async (req) => {
       for (const key of passthrough) {
         if (extracted[key] != null) update[key] = extracted[key];
       }
+      if (extracted.photo_classifications != null) {
+        update.photo_classifications = extracted.photo_classifications;
+      }
       // Prices are numeric in the tool schema but stored as text in items.
       if (extracted.price != null) update.price = String(extracted.price);
       if (extracted.original_price != null) {

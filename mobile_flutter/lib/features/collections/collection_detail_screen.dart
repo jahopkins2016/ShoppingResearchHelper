@@ -6,7 +6,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import 'widgets/add_item_sheet.dart';
 import 'widgets/capture_item_sheet.dart';
+import 'widgets/edit_notes_sheet.dart';
 import 'widgets/in_store_item_detail.dart';
+import 'widgets/metadata_inspector_sheet.dart';
 import 'widgets/price_history_sheet.dart';
 import 'widgets/similar_products_sheet.dart';
 import 'widgets/nearby_stores_sheet.dart';
@@ -290,6 +292,33 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     );
   }
 
+  void _showInspect(Map<String, dynamic> item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => MetadataInspectorSheet(item: item),
+    );
+  }
+
+  void _showEditNotes(Map<String, dynamic> item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditNotesSheet(
+        itemId: item['id'] as String,
+        initialNotes: item['notes'] as String?,
+        onSaved: (next) {
+          if (!mounted) return;
+          setState(() => _items = _items
+              .map((i) => i['id'] == item['id'] ? {...i, 'notes': next} : i)
+              .toList());
+        },
+      ),
+    );
+  }
+
   void _showNearby(Map<String, dynamic> item) {
     showModalBottomSheet(
       context: context,
@@ -365,9 +394,12 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                     itemBuilder: (_, i) => _ItemCard(
                       item: _items[i],
                       onTap: () => _openItem(_items[i]),
+                      onLongPress: () => _showInspect(_items[i]),
                       onPriceHistory: () => _showPriceHistory(_items[i]),
                       onSimilar: () => _showSimilar(_items[i]),
                       onNearby: () => _showNearby(_items[i]),
+                      onEditNotes: () => _showEditNotes(_items[i]),
+                      onInspect: () => _showInspect(_items[i]),
                       onDelete: () => _deleteItem(_items[i]['id']),
                     ),
                   ),
@@ -447,17 +479,23 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
 class _ItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   final VoidCallback onPriceHistory;
   final VoidCallback onSimilar;
   final VoidCallback onNearby;
+  final VoidCallback onEditNotes;
+  final VoidCallback onInspect;
   final VoidCallback onDelete;
 
   const _ItemCard({
     required this.item,
     required this.onTap,
+    required this.onLongPress,
     required this.onPriceHistory,
     required this.onSimilar,
     required this.onNearby,
+    required this.onEditNotes,
+    required this.onInspect,
     required this.onDelete,
   });
 
@@ -483,6 +521,7 @@ class _ItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -682,6 +721,21 @@ class _ItemCard extends StatelessWidget {
                               '${(item['photo_urls'] as List?)?.length ?? 0} photo${((item['photo_urls'] as List?)?.length ?? 0) == 1 ? '' : 's'}',
                           onTap: onTap,
                         ),
+                      const SizedBox(width: 8),
+                      _ActionChip(
+                        icon: (item['notes'] as String?)?.isNotEmpty == true
+                            ? Icons.sticky_note_2
+                            : Icons.note_add_outlined,
+                        label:
+                            (item['notes'] as String?)?.isNotEmpty == true ? 'Note' : 'Add note',
+                        onTap: onEditNotes,
+                      ),
+                      const SizedBox(width: 8),
+                      _ActionChip(
+                        icon: Icons.info_outline,
+                        label: 'Details',
+                        onTap: onInspect,
+                      ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.delete_outline,

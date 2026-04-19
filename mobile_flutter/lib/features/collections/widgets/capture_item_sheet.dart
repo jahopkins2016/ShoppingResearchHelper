@@ -39,6 +39,9 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
   final _storeAddress = TextEditingController();
 
   final List<_CapturedPhoto> _photos = [];
+  List<Map<String, dynamic>> _classifications = [];
+  int _defaultIndex = 0;
+  bool _userPickedDefault = false;
   Position? _position;
   bool _enriching = false;
   bool _saving = false;
@@ -182,6 +185,16 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
         final x = Map<String, dynamic>.from(data['extracted'] as Map);
         if (!mounted) return;
         _applyExtracted(x);
+        final raw = x['photo_classifications'];
+        if (raw is List) {
+          _classifications = raw
+              .map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
+              .toList();
+          if (!_userPickedDefault) {
+            final i = _classifications.indexWhere((c) => c['kind'] == 'product');
+            if (i >= 0 && i < _photos.length) _defaultIndex = i;
+          }
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _error = 'Could not read photos: $e');
@@ -235,7 +248,8 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
         'source': 'in_store',
         'enrichment_status': 'completed',
         'photo_urls': _photos.map((p) => p.publicUrl).toList(),
-        'image_url': _photos.first.publicUrl,
+        'image_url': _photos[_defaultIndex.clamp(0, _photos.length - 1)].publicUrl,
+        if (_classifications.isNotEmpty) 'photo_classifications': _classifications,
         'captured_at': now,
         'title': _emptyToNull(_title.text),
         'brand': _emptyToNull(_brand.text),
@@ -298,6 +312,13 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
             ),
             const SizedBox(height: 16),
             _photoStrip(),
+            if (_photos.length > 1) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Tap a photo to make it the default image.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -412,33 +433,69 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final p = _photos[i];
-          return Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.file(
-                  File(p.localPath),
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () => setState(() => _photos.removeAt(i)),
+          final isDefault = i == _defaultIndex;
+          return GestureDetector(
+            onTap: () => setState(() {
+              _defaultIndex = i;
+              _userPickedDefault = true;
+            }),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isDefault ? AppTheme.primary : Colors.transparent,
+                        width: 3,
+                      ),
                     ),
-                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                    child: Image.file(
+                      File(p.localPath),
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                if (isDefault)
+                  Positioned(
+                    left: 4,
+                    bottom: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text('Default',
+                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _photos.removeAt(i);
+                      if (i < _classifications.length) _classifications.removeAt(i);
+                      if (_defaultIndex >= _photos.length) {
+                        _defaultIndex = _photos.isEmpty ? 0 : _photos.length - 1;
+                      }
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

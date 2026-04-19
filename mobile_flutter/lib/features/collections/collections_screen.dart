@@ -172,8 +172,11 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                           itemCount: _collections.length,
                           itemBuilder: (_, i) => CollectionCard(
                             collection: _collections[i],
-                            onTap: () => context
-                                .push('/collections/${_collections[i]['id']}'),
+                            onTap: () async {
+                              await context
+                                  .push('/collections/${_collections[i]['id']}');
+                              if (mounted) _load();
+                            },
                           ),
                         ),
                       ),
