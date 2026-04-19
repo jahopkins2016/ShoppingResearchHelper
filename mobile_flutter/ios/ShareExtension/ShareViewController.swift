@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 // base class) and immediately triggers save + redirect without showing the
 // compose UI. Writes items in the format receive_sharing_intent expects and
 // launches the host app via ShareMedia-<bundleId>:share.
+@objc(ShareViewController)
 class ShareViewController: SLComposeServiceViewController {
 
     private let appGroupId = "group.com.saveit.saveit"

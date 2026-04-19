@@ -325,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.3.5-ci',
+                  'v1.3.6-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
