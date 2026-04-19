@@ -95,8 +95,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
               !hasImage &&
               updatedAt.compareTo(imagelessCutoff) < 0);
       if (shouldRetry) {
-        _supabase.functions.invoke('enrich-item',
-            body: {'item_id': item['id']});
+        _invokeEnrich(item['id'] as String);
       }
     }
   }
@@ -117,7 +116,20 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         .single();
 
     setState(() => _items = [data, ..._items]);
-    _supabase.functions.invoke('enrich-item', body: {'item_id': data['id']});
+    _invokeEnrich(data['id'] as String);
+  }
+
+  // supabase_flutter bakes the anon Authorization into the Functions client
+  // at init and never swaps in the user's JWT — its AuthHttpClient uses
+  // putIfAbsent, so it can't override. Pass the current session token
+  // explicitly on every call so enrich-item sees an authenticated user.
+  Future<FunctionResponse> _invokeEnrich(String itemId) {
+    final token = _supabase.auth.currentSession?.accessToken;
+    return _supabase.functions.invoke(
+      'enrich-item',
+      body: {'item_id': itemId},
+      headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+    );
   }
 
   Future<void> _dismissPriceDrop(String itemId) async {
@@ -317,8 +329,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
 
   Future<void> _reEnrichAndRefresh(String itemId) async {
     try {
-      await _supabase.functions.invoke('enrich-item',
-          body: {'item_id': itemId});
+      await _invokeEnrich(itemId);
     } catch (_) {
       return;
     }

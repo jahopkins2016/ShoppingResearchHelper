@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart' show Share;
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -17,11 +18,20 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _supabase = Supabase.instance.client;
   Map<String, dynamic>? _profile;
+  String? _version;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _version = 'v${info.version}+${info.buildNumber}');
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -143,10 +153,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
-              'v1.2.0-ci',
-              style: TextStyle(
+              _version ?? '',
+              style: const TextStyle(
                 fontSize: 11,
                 color: AppTheme.textSecondary,
               ),

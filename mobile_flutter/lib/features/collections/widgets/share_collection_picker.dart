@@ -58,7 +58,12 @@ class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
         'enrichment_status': 'pending',
       }).select().single();
 
-      _supabase.functions.invoke('enrich-item', body: {'item_id': data['id']});
+      final token = _supabase.auth.currentSession?.accessToken;
+      _supabase.functions.invoke(
+        'enrich-item',
+        body: {'item_id': data['id']},
+        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+      );
 
       if (mounted) {
         Navigator.of(context).pop(true);

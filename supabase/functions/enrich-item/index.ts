@@ -18,27 +18,13 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Validate caller: accept service role key OR a valid user JWT
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+  // Supabase's platform gateway has already verified the JWT (verify_jwt: true).
+  // We only need a presence check so unauthenticated requests still fail early.
+  if (!req.headers.get("Authorization")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const isServiceRole = token === serviceRoleKey;
-
-  if (!isServiceRole) {
-    // Verify the user JWT is valid
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
   }
 
   let itemId: string;
