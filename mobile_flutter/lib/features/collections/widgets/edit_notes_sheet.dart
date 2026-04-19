@@ -60,8 +60,8 @@ class _EditNotesSheetState extends State<EditNotesSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.all(20),

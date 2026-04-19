@@ -13,8 +13,8 @@ class NearbyStoresSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppTheme.surface(context),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(24),
@@ -92,7 +92,7 @@ class _StoreButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppTheme.divider),
         ),

@@ -35,9 +35,9 @@ class CollectionCard extends StatelessWidget {
         opacity: isArchived ? 0.6 : 1.0,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.surface(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.divider),
+            border: Border.all(color: AppTheme.dividerColor(context)),
           ),
           padding: const EdgeInsets.all(12),
           child: Column(

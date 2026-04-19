@@ -47,8 +47,8 @@ class _SimilarProductsSheetState extends State<SimilarProductsSheet> {
       maxChildSize: 0.9,
       expand: false,
       builder: (_, controller) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -116,7 +116,7 @@ class _SimilarCard extends StatelessWidget {
         width: 160,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppTheme.divider),
         ),

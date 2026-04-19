@@ -271,8 +271,8 @@ class _InputBar extends StatelessWidget {
         top: 8,
         bottom: MediaQuery.of(context).viewInsets.bottom + 12,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppTheme.surface(context),
         border: Border(top: BorderSide(color: AppTheme.divider)),
       ),
       child: Row(

@@ -52,8 +52,8 @@ class _PriceHistorySheetState extends State<PriceHistorySheet> {
       maxChildSize: 0.9,
       expand: false,
       builder: (_, controller) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(

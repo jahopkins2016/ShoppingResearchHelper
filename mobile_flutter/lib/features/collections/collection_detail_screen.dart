@@ -213,7 +213,7 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
   void _showAddItem() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.surface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

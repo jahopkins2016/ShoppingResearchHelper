@@ -76,8 +76,8 @@ class MetadataInspectorSheet extends StatelessWidget {
       maxChildSize: 0.95,
       expand: false,
       builder: (_, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+        color: AppTheme.surface(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),

@@ -13,6 +13,31 @@ class AppTheme {
   static const Color warning = Color(0xFFF59E0B);
   static const Color danger = Color(0xFFDC2626);
 
+  // Theme-aware helpers. Use these instead of hardcoded light colors so
+  // widgets adapt to dark mode automatically.
+  static Color surface(BuildContext c) =>
+      Theme.of(c).brightness == Brightness.dark
+          ? const Color(0xFF1C1F26)
+          : Colors.white;
+  static Color scaffold(BuildContext c) =>
+      Theme.of(c).scaffoldBackgroundColor;
+  static Color dividerColor(BuildContext c) =>
+      Theme.of(c).brightness == Brightness.dark
+          ? const Color(0xFF2E3138)
+          : divider;
+  static Color textPrimary(BuildContext c) =>
+      Theme.of(c).brightness == Brightness.dark
+          ? const Color(0xFFE8EAED)
+          : textDark;
+  static Color textMuted(BuildContext c) =>
+      Theme.of(c).brightness == Brightness.dark
+          ? const Color(0xFF9CA3AF)
+          : textSecondary;
+  static Color placeholderBg(BuildContext c) =>
+      Theme.of(c).brightness == Brightness.dark
+          ? const Color(0xFF2E3138)
+          : placeholder;
+
   static ThemeData get light => ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

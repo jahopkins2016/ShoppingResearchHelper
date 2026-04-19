@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Profile card
           Container(
-            color: Colors.white,
+            color: AppTheme.surface(context),
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
@@ -146,7 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           // Sign out
           Container(
-            color: Colors.white,
+            color: AppTheme.surface(context),
             child: ListTile(
               leading: const Icon(Icons.logout, color: AppTheme.danger),
               title: const Text('Sign Out',
@@ -204,9 +204,9 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: AppTheme.surface(context),
       child: ListTile(
-        leading: Icon(icon, color: AppTheme.textSecondary),
+        leading: Icon(icon, color: AppTheme.textMuted(context)),
         title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
         subtitle: subtitle != null ? Text(subtitle!) : null,
         trailing: trailing ??
