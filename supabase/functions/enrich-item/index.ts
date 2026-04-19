@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { extractMetadata } from "../_shared/metadata-extractor.ts";
 import { findSimilarProducts } from "../_shared/similar-products.ts";
+import { unwrapGoogleUrl, titleFromUrl } from "../_shared/url-utils.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -67,6 +68,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // If the saved URL is a Google wrapper (search/Lens/imgres), swap in
+    // the real destination before enrichment. Persist so the UI's "open"
+    // action also lands on the product page, not Google.
+    const unwrappedUrl = unwrapGoogleUrl(item.url);
+    if (unwrappedUrl !== item.url) {
+      await supabase.from("items").update({ url: unwrappedUrl }).eq("id", itemId);
+      item.url = unwrappedUrl;
+    }
+
     // Fetch the URL with a browser-like User-Agent
     let html: string;
     try {
@@ -105,9 +115,16 @@ Deno.serve(async (req) => {
       limit: 10,
     });
 
+    // If extraction gave us nothing usable (e.g. Google search page, blocked
+    // by anti-bot, or a non-product page), fall back to a readable title
+    // derived from the URL instead of leaving the field null — the UI
+    // otherwise shows the raw URL with %20 etc.
+    const resolvedTitle =
+      (metadata.title && metadata.title.trim()) || titleFromUrl(item.url);
+
     // Build update payload with all extracted fields
     const update: Record<string, any> = {
-      title: metadata.title,
+      title: resolvedTitle,
       description: metadata.description,
       image_url: metadata.image_url,
       site_name: metadata.site_name,

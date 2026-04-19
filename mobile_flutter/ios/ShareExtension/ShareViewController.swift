@@ -60,9 +60,9 @@ class ShareViewController: SLComposeServiceViewController {
                 provider.loadItem(forTypeIdentifier: urlType, options: nil) { item, _ in
                     defer { group.leave() }
                     if let url = item as? URL {
-                        append(self.makeEntry(path: url.absoluteString, type: "url"))
+                        append(self.makeEntry(path: self.unwrapGoogleUrl(url.absoluteString), type: "url"))
                     } else if let str = item as? String, let url = URL(string: str) {
-                        append(self.makeEntry(path: url.absoluteString, type: "url"))
+                        append(self.makeEntry(path: self.unwrapGoogleUrl(url.absoluteString), type: "url"))
                     }
                 }
             } else if provider.hasItemConformingToTypeIdentifier(textType) {
@@ -71,7 +71,7 @@ class ShareViewController: SLComposeServiceViewController {
                     defer { group.leave() }
                     if let text = item as? String {
                         if let url = URL(string: text), url.scheme != nil {
-                            append(self.makeEntry(path: url.absoluteString, type: "url"))
+                            append(self.makeEntry(path: self.unwrapGoogleUrl(url.absoluteString), type: "url"))
                         } else {
                             append(self.makeEntry(path: text, type: "text", mimeType: "text/plain"))
                         }
@@ -94,6 +94,30 @@ class ShareViewController: SLComposeServiceViewController {
                 self.completeAndRedirect(saved: result == .success && !sharedItems.isEmpty)
             }
         }
+    }
+
+    // Google's share sheet often hands us a wrapper URL that points back at
+    // Google (search results, Lens, image viewer, AMP). When the wrapper
+    // carries the real destination as a query param, pull it out so the app
+    // saves the actual product page instead of a Google page we can't enrich.
+    private func unwrapGoogleUrl(_ raw: String) -> String {
+        guard let comps = URLComponents(string: raw),
+              let host = comps.host?.lowercased(),
+              host.contains("google.") else { return raw }
+
+        let items = comps.queryItems ?? []
+        let preferredKeys = ["imgrefurl", "url", "q", "u"]
+        for key in preferredKeys {
+            if let v = items.first(where: { $0.name == key })?.value,
+               let u = URL(string: v),
+               let s = u.scheme?.lowercased(),
+               (s == "http" || s == "https"),
+               let h = u.host?.lowercased(),
+               !h.contains("google.") {
+                return u.absoluteString
+            }
+        }
+        return raw
     }
 
     private func makeEntry(path: String, type: String, mimeType: String? = nil) -> [String: Any] {

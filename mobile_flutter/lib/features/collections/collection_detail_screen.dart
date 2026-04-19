@@ -9,6 +9,7 @@ import 'widgets/price_history_sheet.dart';
 import 'widgets/similar_products_sheet.dart';
 import 'widgets/nearby_stores_sheet.dart';
 import 'widgets/edit_collection_sheet.dart';
+import 'widgets/share_collection_sheet.dart';
 
 class CollectionDetailScreen extends StatefulWidget {
   final String id;
@@ -222,6 +223,19 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     );
   }
 
+  void _showShareCollection() {
+    if (_collection == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ShareCollectionSheet(
+        collection: _collection!,
+        onChanged: _load,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,10 +248,12 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
           ),
           PopupMenuButton<String>(
             onSelected: (v) {
+              if (v == 'share') _showShareCollection();
               if (v == 'edit') _showEditCollection();
               if (v == 'delete') _deleteCollection();
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(value: 'share', child: Text('Share')),
               const PopupMenuItem(value: 'edit', child: Text('Edit')),
               const PopupMenuItem(
                   value: 'delete',

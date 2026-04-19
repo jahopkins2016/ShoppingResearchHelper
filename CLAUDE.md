@@ -22,9 +22,9 @@ Full spec: `SaveIt_Product_Spec.docx` in this directory.
 
 > Backend can be migrated later if scaling requires it. Supabase runs on AWS infrastructure and has an Enterprise tier — starting here is the right call.
 
-**Mobile:** React Native with Expo
-**Browser:** Chrome/Edge extension (Manifest V3)
-**Web (future):** Next.js
+**Mobile:** Flutter (`mobile_flutter/`) — iOS + Android, with a native iOS share extension (`ios/ShareExtension/ShareViewController.swift`)
+**Web:** Next.js App Router (`web/`) — public collection pages, invite acceptance, in-browser app
+**Browser:** Chrome/Edge extension (`extension/`, Manifest V3)
 
 ## Database Schema (5 core tables)
 
