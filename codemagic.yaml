@@ -82,6 +82,13 @@ workflows:
       flutter: stable
       java: 17
     scripts:
+      - name: Restore debug keystore
+        script: |
+          # ANDROID_DEBUG_KEYSTORE_B64 must be in the saveit_env group.
+          # This ensures Google Sign-In works — the SHA-1 matches what's
+          # registered in Google Cloud Console.
+          mkdir -p ~/.android
+          printf '%s' "$ANDROID_DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
       - name: Get Flutter packages
         script: |
           flutter pub get
