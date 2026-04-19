@@ -75,14 +75,25 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
         now.subtract(const Duration(seconds: 30)).toIso8601String();
     final failedCutoff =
         now.subtract(const Duration(minutes: 5)).toIso8601String();
+    // Completed items with no image get a retry at most once per hour — the
+    // site may have been blocking us earlier, or enrichment ran before we
+    // learned to follow redirect shorteners.
+    final imagelessCutoff =
+        now.subtract(const Duration(hours: 1)).toIso8601String();
     for (final item in items) {
       final status = item['enrichment_status'];
+      final updatedAt =
+          (item['updated_at'] ?? item['created_at']) as String;
+      final hasImage = (item['cached_image_path'] as String?)?.isNotEmpty ==
+              true ||
+          (item['image_url'] as String?)?.isNotEmpty == true;
       final shouldRetry = (status == 'pending' &&
               (item['created_at'] as String).compareTo(pendingCutoff) < 0) ||
           (status == 'failed' &&
-              ((item['updated_at'] ?? item['created_at']) as String)
-                      .compareTo(failedCutoff) <
-                  0);
+              updatedAt.compareTo(failedCutoff) < 0) ||
+          (status == 'completed' &&
+              !hasImage &&
+              updatedAt.compareTo(imagelessCutoff) < 0);
       if (shouldRetry) {
         _supabase.functions.invoke('enrich-item',
             body: {'item_id': item['id']});
@@ -301,7 +312,26 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     _supabase
         .from('items')
         .update({'last_viewed_at': now}).eq('id', item['id']);
-    _supabase.functions.invoke('enrich-item', body: {'item_id': item['id']});
+    _reEnrichAndRefresh(item['id'] as String);
+  }
+
+  Future<void> _reEnrichAndRefresh(String itemId) async {
+    try {
+      await _supabase.functions.invoke('enrich-item',
+          body: {'item_id': itemId});
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    final fresh = await _supabase
+        .from('items')
+        .select()
+        .eq('id', itemId)
+        .maybeSingle();
+    if (fresh == null || !mounted) return;
+    setState(() => _items = _items
+        .map((i) => i['id'] == itemId ? {...i, ...fresh} : i)
+        .toList());
   }
 
   Widget _emptyBody() => Center(
