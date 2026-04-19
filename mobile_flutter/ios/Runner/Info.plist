@@ -91,5 +91,7 @@
 	</array>
 	<key>AppGroupId</key>
 	<string>group.com.saveit.saveit</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
