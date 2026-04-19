@@ -2,7 +2,14 @@ import UIKit
 import Social
 import UniformTypeIdentifiers
 
+// Writes shared items in the exact format the receive_sharing_intent
+// Flutter plugin expects (array of SharedMediaFile-compatible dicts) and
+// opens the host app via the ShareMedia-<bundle_id>:share URL scheme.
 class ShareViewController: UIViewController {
+
+    private let appGroupId = "group.com.saveit.saveit"
+    private let hostBundleId = "com.jahopkins.saveit"
+    private let shareKey = "ShareKey"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,7 +24,7 @@ class ShareViewController: UIViewController {
         }
 
         let group = DispatchGroup()
-        var sharedItems: [[String: String]] = []
+        var sharedItems: [[String: Any]] = []
 
         for provider in providers {
             let urlType = "public.url"
@@ -27,9 +34,9 @@ class ShareViewController: UIViewController {
                 group.enter()
                 provider.loadItem(forTypeIdentifier: urlType, options: nil) { item, _ in
                     if let url = item as? URL {
-                        sharedItems.append(["value": url.absoluteString, "type": "url"])
+                        sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
                     } else if let str = item as? String, let url = URL(string: str) {
-                        sharedItems.append(["value": url.absoluteString, "type": "url"])
+                        sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
                     }
                     group.leave()
                 }
@@ -37,7 +44,12 @@ class ShareViewController: UIViewController {
                 group.enter()
                 provider.loadItem(forTypeIdentifier: textType, options: nil) { item, _ in
                     if let text = item as? String {
-                        sharedItems.append(["value": text, "type": "url"])
+                        // If the text is actually a URL, classify as url; else as text
+                        if let url = URL(string: text), url.scheme != nil {
+                            sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
+                        } else {
+                            sharedItems.append(self.makeEntry(path: text, type: "text", mimeType: "text/plain"))
+                        }
                     }
                     group.leave()
                 }
@@ -45,28 +57,50 @@ class ShareViewController: UIViewController {
         }
 
         group.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
             if !sharedItems.isEmpty,
-               let jsonData = try? JSONSerialization.data(withJSONObject: sharedItems),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                // Write in the exact format receive_sharing_intent's Flutter plugin reads
-                let defaults = UserDefaults(suiteName: "group.com.saveit.saveit")
-                defaults?.set(jsonString, forKey: "ShareKey")
+               let jsonData = try? JSONSerialization.data(withJSONObject: sharedItems) {
+                let defaults = UserDefaults(suiteName: self.appGroupId)
+                defaults?.set(jsonData, forKey: self.shareKey)
                 defaults?.synchronize()
             }
-            self?.openMainApp()
+            self.openHostApp()
         }
     }
 
-    private func openMainApp() {
-        // Open the host app via URL scheme so Flutter can read the shared item
-        let url = URL(string: "saveit://share")!
+    private func makeEntry(path: String, type: String, mimeType: String? = nil) -> [String: Any] {
+        // Fields match SharedMediaFile (Codable) in receive_sharing_intent.
+        var dict: [String: Any] = [
+            "path": path,
+            "type": type,
+        ]
+        if let mimeType = mimeType {
+            dict["mimeType"] = mimeType
+        }
+        return dict
+    }
+
+    private func openHostApp() {
+        guard let url = URL(string: "ShareMedia-\(hostBundleId):share") else {
+            completeRequest()
+            return
+        }
         var responder: UIResponder? = self
-        while let r = responder {
-            if let app = r as? UIApplication {
-                app.open(url)
-                break
+        if #available(iOS 18.0, *) {
+            while responder != nil {
+                if let app = responder as? UIApplication {
+                    app.open(url, options: [:], completionHandler: nil)
+                }
+                responder = responder?.next
             }
-            responder = r.next
+        } else {
+            let selector = sel_registerName("openURL:")
+            while responder != nil {
+                if responder?.responds(to: selector) == true {
+                    _ = responder?.perform(selector, with: url)
+                }
+                responder = responder?.next
+            }
         }
         completeRequest()
     }

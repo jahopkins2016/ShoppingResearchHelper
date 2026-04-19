@@ -83,6 +83,16 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>ShareMedia-com.jahopkins.saveit</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.jahopkins.saveit.sharemedia</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
 				<string>com.googleusercontent.apps.299785436483-u4ljnu08picdv7il1a84diesh1ln3fn4</string>
 			</array>
 			<key>CFBundleURLName</key>
