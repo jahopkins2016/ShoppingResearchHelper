@@ -336,3 +336,36 @@ alter table public.pinned_collections enable row level security;
 create policy "Users can manage their own pinned collections"
   on public.pinned_collections for all
   using (auth.uid() = user_id);
+
+-- ============================================================
+-- IN-STORE ITEM CAPTURE
+-- ============================================================
+alter table public.items
+  add column if not exists source text not null default 'url',
+  add column if not exists store_name text,
+  add column if not exists store_address text,
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision,
+  add column if not exists captured_at timestamptz,
+  add column if not exists photo_urls jsonb;
+
+do $$ begin
+  alter table public.items
+    add constraint items_source_check check (source in ('url', 'in_store'));
+exception when duplicate_object then null;
+end $$;
+
+alter table public.items alter column url drop not null;
+
+do $$ begin
+  alter table public.items
+    add constraint items_source_shape_check check (
+      (source = 'url' and url is not null)
+      or (source = 'in_store' and photo_urls is not null and jsonb_array_length(photo_urls) > 0)
+    );
+exception when duplicate_object then null;
+end $$;
+
+create index if not exists idx_items_source on public.items (source);
+create index if not exists idx_items_captured_at on public.items (captured_at desc)
+  where source = 'in_store';

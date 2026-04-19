@@ -103,5 +103,13 @@
 	<string>group.com.saveit.saveit</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>SaveIt uses the camera so you can capture photos of items and price tags while shopping in-store.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SaveIt needs access to your photo library so you can attach existing photos to saved items.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SaveIt can save captured item photos back to your photo library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SaveIt uses your location to identify the store you're shopping in so in-store captures are tagged automatically.</string>
 </dict>
 </plist>

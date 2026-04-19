@@ -13,7 +13,7 @@ interface PriceHistoryRow {
 
 interface Item {
   id: string;
-  url: string;
+  url: string | null;
   title: string | null;
   description: string | null;
   image_url: string | null;
@@ -41,6 +41,13 @@ interface Item {
   shipping: string | null;
   return_policy: string | null;
   updated_at: string | null;
+  source: string | null;
+  store_name: string | null;
+  store_address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  captured_at: string | null;
+  photo_urls: string[] | null;
   price_history: PriceHistoryRow[];
   [key: string]: unknown;
 }
@@ -80,6 +87,7 @@ export default function CollectionItems({
   const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [nearbyItem, setNearbyItem] = useState<Item | null>(null);
+  const [inStoreItem, setInStoreItem] = useState<Item | null>(null);
 
   const supabase = createClient();
 
@@ -346,24 +354,44 @@ export default function CollectionItems({
           const hasSale = item.sale_price && item.original_price;
           const displayPrice = hasSale ? item.sale_price : item.price;
           const avail = item.availability ? availabilityLabel(item.availability) : null;
+          const isInStore = item.source === "in_store";
+          const cardImage =
+            item.cached_image_path ||
+            item.image_url ||
+            (item.photo_urls && item.photo_urls[0]) ||
+            null;
+
+          const cardClickProps = isInStore
+            ? {
+                className: styles.card,
+                onClick: () => setInStoreItem(item),
+                style: { cursor: "pointer" as const },
+              }
+            : {
+                href: item.url ?? "#",
+                target: "_blank" as const,
+                rel: "noopener noreferrer",
+                className: styles.card,
+                onClick: () => handleCardClick(item),
+              };
+
+          const CardTag = (isInStore ? "div" : "a") as React.ElementType;
 
           return (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.card}
-              onClick={() => handleCardClick(item)}
-            >
-              {(item.cached_image_path || item.image_url) ? (
+            <CardTag key={item.id} {...cardClickProps}>
+              {cardImage ? (
                 <div className={styles.imageWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={(item.cached_image_path || item.image_url)!}
+                    src={cardImage}
                     alt={item.title ?? ""}
                     className={styles.image}
                   />
+                  {isInStore && item.photo_urls && item.photo_urls.length > 1 && (
+                    <span className={styles.availabilityBadge + " " + styles.inStock}>
+                      {item.photo_urls.length} photos
+                    </span>
+                  )}
                   {avail && (
                     <span className={`${styles.availabilityBadge} ${avail.inStock ? styles.inStock : styles.outOfStock}`}>
                       {avail.text}
@@ -440,12 +468,28 @@ export default function CollectionItems({
               <div className={styles.cardBody}>
                 <h2 className={styles.cardTitle}>{item.title ?? item.url}</h2>
 
-                {(item.brand || item.site_name) && (
-                  <div className={styles.cardMeta}>
-                    {item.brand && <span className={styles.brand}>{item.brand}</span>}
-                    {item.brand && item.site_name && <span className={styles.metaDot}>·</span>}
-                    {item.site_name && <span className={styles.siteName}>{item.site_name}</span>}
-                  </div>
+                {isInStore ? (
+                  (item.brand || item.store_name || item.captured_at) && (
+                    <div className={styles.cardMeta}>
+                      {item.brand && <span className={styles.brand}>{item.brand}</span>}
+                      {item.brand && item.store_name && <span className={styles.metaDot}>·</span>}
+                      {item.store_name && <span className={styles.siteName}>🏬 {item.store_name}</span>}
+                      {item.captured_at && (
+                        <>
+                          <span className={styles.metaDot}>·</span>
+                          <span className={styles.siteName}>{formatDate(item.captured_at)}</span>
+                        </>
+                      )}
+                    </div>
+                  )
+                ) : (
+                  (item.brand || item.site_name) && (
+                    <div className={styles.cardMeta}>
+                      {item.brand && <span className={styles.brand}>{item.brand}</span>}
+                      {item.brand && item.site_name && <span className={styles.metaDot}>·</span>}
+                      {item.site_name && <span className={styles.siteName}>{item.site_name}</span>}
+                    </div>
+                  )
                 )}
 
                 {displayPrice && (
@@ -518,7 +562,7 @@ export default function CollectionItems({
 
                 {item.notes && <p className={styles.notes}>{item.notes}</p>}
               </div>
-            </a>
+            </CardTag>
           );
         })}
       </div>
@@ -569,6 +613,13 @@ export default function CollectionItems({
         <NearbyModal
           item={nearbyItem}
           onClose={() => setNearbyItem(null)}
+        />
+      )}
+      {inStoreItem && (
+        <InStoreModal
+          item={inStoreItem}
+          onClose={() => setInStoreItem(null)}
+          formatDate={formatDate}
         />
       )}
     </>
@@ -947,6 +998,114 @@ function SimilarModal({
                 </div>
               </a>
             ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InStoreModal({
+  item,
+  onClose,
+  formatDate,
+}: {
+  item: Item;
+  onClose: () => void;
+  formatDate: (iso: string) => string;
+}) {
+  const [index, setIndex] = useState(0);
+  const photos = item.photo_urls ?? [];
+  const hasCoords = item.latitude != null && item.longitude != null;
+  const mapsUrl = hasCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`
+    : null;
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.inspectContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.inspectHeader}>
+          <h3 className={styles.modalTitle}>
+            {item.title ?? "In-store item"}
+          </h3>
+          <button className={styles.inspectClose} onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        {photos.length > 0 && (
+          <div className={styles.inspectImageWrap}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photos[index]}
+              alt={item.title ?? ""}
+              className={styles.inspectImage}
+            />
+            {photos.length > 1 && (
+              <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                {photos.map((p, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={p}
+                    alt=""
+                    onClick={() => setIndex(i)}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      outline: i === index ? "2px solid #2563EB" : "none",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <table className={styles.inspectTable}>
+          <tbody>
+            {([
+              ["Brand", item.brand],
+              ["Price", item.price ? `${item.currency ?? ""} ${item.price}`.trim() : null],
+              ["Size", item.size],
+              ["Colour", item.color],
+              ["Store", item.store_name],
+              ["Address", item.store_address],
+              ["Captured", item.captured_at ? formatDate(item.captured_at) : null],
+              ["Notes", item.notes],
+            ] as [string, string | null][]).map(([label, value]) =>
+              value ? (
+                <tr key={label}>
+                  <td className={styles.inspectLabel}>{label}</td>
+                  <td className={styles.inspectValue}>{value}</td>
+                </tr>
+              ) : null
+            )}
+          </tbody>
+        </table>
+
+        {mapsUrl && (
+          <div className={styles.nearbyActions}>
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.nearbyLink}
+            >
+              <span className={styles.nearbyIcon}>🗺️</span>
+              <div>
+                <span className={styles.nearbyLinkTitle}>Open in Maps</span>
+                <span className={styles.nearbyLinkSub}>
+                  {item.latitude?.toFixed(4)}, {item.longitude?.toFixed(4)}
+                </span>
+              </div>
+            </a>
           </div>
         )}
       </div>

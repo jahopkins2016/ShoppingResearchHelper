@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_theme.dart';
 import 'widgets/add_item_sheet.dart';
+import 'widgets/capture_item_sheet.dart';
+import 'widgets/in_store_item_detail.dart';
 import 'widgets/price_history_sheet.dart';
 import 'widgets/similar_products_sheet.dart';
 import 'widgets/nearby_stores_sheet.dart';
@@ -81,6 +83,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     final imagelessCutoff =
         now.subtract(const Duration(hours: 1)).toIso8601String();
     for (final item in items) {
+      // In-store items are enriched once at capture time via
+      // enrich-item-from-photos — skip the URL-enrichment retry path.
+      if (item['source'] == 'in_store') continue;
       final status = item['enrichment_status'];
       final updatedAt =
           (item['updated_at'] ?? item['created_at']) as String;
@@ -192,9 +197,70 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
   void _showAddItem() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.link, color: AppTheme.primary),
+              title: const Text('Add from URL'),
+              subtitle: const Text('Paste a product link'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showAddFromUrl();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined, color: AppTheme.primary),
+              title: const Text('Capture in store'),
+              subtitle: const Text('Snap photos — AI reads the details'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCapture();
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddFromUrl() {
+    showModalBottomSheet(
+      context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddItemSheet(onAdd: _addItem),
+    );
+  }
+
+  void _showCapture() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CaptureItemSheet(
+        collectionId: widget.id,
+        onSaved: (inserted) async {
+          if (!mounted) return;
+          setState(() => _items = [inserted, ..._items]);
+        },
+      ),
     );
   }
 
@@ -310,6 +376,12 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
   }
 
   void _openItem(Map<String, dynamic> item) async {
+    if (item['source'] == 'in_store') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => InStoreItemDetail(item: item)),
+      );
+      return;
+    }
     final url = item['url'] as String?;
     if (url == null) return;
     final uri = Uri.tryParse(url);
@@ -391,12 +463,20 @@ class _ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUri =
+    final isInStore = item['source'] == 'in_store';
+    String? imageUri =
         (item['cached_image_path'] ?? item['image_url']) as String?;
-    final hist =
-        List<Map<String, dynamic>>.from(item['price_history'] ?? []);
+    if (imageUri == null && isInStore) {
+      final photos = item['photo_urls'];
+      if (photos is List && photos.isNotEmpty) {
+        imageUri = photos.first?.toString();
+      }
+    }
+    final hist = isInStore
+        ? const <Map<String, dynamic>>[]
+        : List<Map<String, dynamic>>.from(item['price_history'] ?? []);
     final histSlice = hist.take(3).toList();
-    final hasPriceDrop = item['price_drop_seen'] == false;
+    final hasPriceDrop = !isInStore && item['price_drop_seen'] == false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -440,31 +520,50 @@ class _ItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Site row
-                  Row(
-                    children: [
-                      if (item['site_favicon_url'] != null)
-                        CachedNetworkImage(
-                          imageUrl: item['site_favicon_url'],
-                          width: 14,
-                          height: 14,
-                          errorWidget: (_, __, ___) =>
-                              const SizedBox.shrink(),
-                        ),
-                      if (item['site_favicon_url'] != null)
+                  // Site / store row
+                  if (isInStore)
+                    Row(
+                      children: [
+                        const Icon(Icons.storefront_outlined,
+                            size: 14, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          item['site_name'] ??
-                              Uri.tryParse(item['url'] ?? '')
-                                  ?.host ??
-                              '',
-                          style: Theme.of(context).textTheme.bodySmall,
-                          overflow: TextOverflow.ellipsis,
+                        Expanded(
+                          child: Text(
+                            [
+                              item['store_name']?.toString(),
+                              _formatCapturedAt(item['captured_at']),
+                            ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
+                            style: Theme.of(context).textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        if (item['site_favicon_url'] != null)
+                          CachedNetworkImage(
+                            imageUrl: item['site_favicon_url'],
+                            width: 14,
+                            height: 14,
+                            errorWidget: (_, __, ___) =>
+                                const SizedBox.shrink(),
+                          ),
+                        if (item['site_favicon_url'] != null)
+                          const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            item['site_name'] ??
+                                Uri.tryParse(item['url'] ?? '')
+                                    ?.host ??
+                                '',
+                            style: Theme.of(context).textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
 
                   // Price
                   if (item['price'] != null) ...[
@@ -564,17 +663,25 @@ class _ItemCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _ActionChip(
-                        icon: Icons.compare_arrows,
-                        label: 'Similar',
-                        onTap: onSimilar,
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionChip(
-                        icon: Icons.location_on_outlined,
-                        label: 'Nearby',
-                        onTap: onNearby,
-                      ),
+                      if (!isInStore) ...[
+                        _ActionChip(
+                          icon: Icons.compare_arrows,
+                          label: 'Similar',
+                          onTap: onSimilar,
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionChip(
+                          icon: Icons.location_on_outlined,
+                          label: 'Nearby',
+                          onTap: onNearby,
+                        ),
+                      ] else
+                        _ActionChip(
+                          icon: Icons.photo_library_outlined,
+                          label:
+                              '${(item['photo_urls'] as List?)?.length ?? 0} photo${((item['photo_urls'] as List?)?.length ?? 0) == 1 ? '' : 's'}',
+                          onTap: onTap,
+                        ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.delete_outline,
@@ -599,6 +706,13 @@ class _ItemCard extends StatelessWidget {
     final d = DateTime.tryParse(iso);
     if (d == null) return '';
     return '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  static String? _formatCapturedAt(dynamic iso) {
+    if (iso == null) return null;
+    final d = DateTime.tryParse(iso.toString())?.toLocal();
+    if (d == null) return null;
+    return '${_months[d.month - 1]} ${d.day}';
   }
 
   static const _months = [
