@@ -31,11 +31,31 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
   String _filter = 'all';
   bool _showArchived = false;
 
+  String? _lastUserId;
+
   @override
   void initState() {
     super.initState();
     _instance = this;
-    _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload whenever the authenticated user changes (including initial login).
+    final userId = context.watch<AuthProvider>().userId;
+    if (userId != _lastUserId) {
+      _lastUserId = userId;
+      if (userId != null) {
+        _load();
+      } else {
+        setState(() {
+          _collections = [];
+          _pendingInvites = [];
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -52,6 +72,21 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
+    try {
+      await _loadInner();
+    } catch (e, st) {
+      debugPrint('Error loading collections: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load collections: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadInner() async {
     final userId = context.read<AuthProvider>().userId;
     if (userId == null) return;
     final email = _supabase.auth.currentUser?.email ?? '';
@@ -209,7 +244,6 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
     setState(() {
       _collections = list;
       _pendingInvites = pending;
-      _loading = false;
     });
   }
 
