@@ -104,6 +104,14 @@ class _SaveItAppState extends State<SaveItApp> {
       navigatorKey: _rootNavigatorKey,
       refreshListenable: authProvider,
       initialLocation: '/collections',
+      // The iOS share extension wakes the app via a custom URL scheme
+      // (ShareMedia-<bundle>:share). iOS hands that to Flutter as the
+      // initial route, which go_router can't match. Swallow it here so
+      // the user lands on /collections instead of the error page; the
+      // receive_sharing_intent plugin picks up the shared URL separately.
+      onException: (context, state, router) {
+        router.go('/collections');
+      },
       redirect: (context, state) {
         final isLoggedIn = authProvider.isAuthenticated;
         final isOnAuth = state.matchedLocation == '/login';
