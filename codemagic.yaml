@@ -25,11 +25,11 @@ workflows:
         script: |
           app-store-connect fetch-signing-files com.jahopkins.saveit \
             --type IOS_APP_STORE \
-            --certificate-key-path=/tmp/certificate_key \
+            --certificate-key=@file:/tmp/certificate_key \
             --create
           app-store-connect fetch-signing-files com.jahopkins.saveit.ShareExtension \
             --type IOS_APP_STORE \
-            --certificate-key-path=/tmp/certificate_key \
+            --certificate-key=@file:/tmp/certificate_key \
             --create
       - name: Add certificates to keychain
         script: |
