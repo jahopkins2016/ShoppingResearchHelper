@@ -90,6 +90,18 @@ Deno.serve(async (req) => {
         redirect: "follow",
       });
       html = await resp.text();
+
+      // If the URL was a redirect shortener (share.google, g.co, bit.ly,
+      // amzn.to, etc.), fetch landed on the real product page. Persist that
+      // URL so every downstream consumer — and the next enrichment run —
+      // sees the resolved destination.
+      if (resp.url && resp.url !== item.url) {
+        const landed = unwrapGoogleUrl(resp.url);
+        if (landed !== item.url) {
+          await supabase.from("items").update({ url: landed }).eq("id", itemId);
+          item.url = landed;
+        }
+      }
     } catch (e: any) {
       await supabase
         .from("items")
