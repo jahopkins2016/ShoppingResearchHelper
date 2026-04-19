@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -139,18 +141,34 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String _generateRawNonce([int length = 32]) {
+    const charset =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
+    final rng = Random.secure();
+    return List.generate(length, (_) => charset[rng.nextInt(charset.length)])
+        .join();
+  }
+
   Future<void> _googleSignIn() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      // The iOS Google SDK auto-embeds a nonce in the id_token; supabase_flutter
+      // rejects the token unless we hand it the matching raw nonce. Generate a
+      // raw nonce, hash it for Google (GIDSignIn expects the SHA-256 hash),
+      // and pass the raw value to Supabase for verification.
+      final rawNonce = _generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
       final googleSignIn = GoogleSignIn.instance;
       await googleSignIn.initialize(
         clientId:
             '299785436483-u4ljnu08picdv7il1a84diesh1ln3fn4.apps.googleusercontent.com',
         serverClientId:
             '299785436483-c29cu4h80n6hpomhs5ue6k9p4dlnjua3.apps.googleusercontent.com',
+        nonce: hashedNonce,
       );
       // Ensure a fresh account picker every time so the user can switch
       // Google accounts between sign-ins.
@@ -164,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
+        nonce: rawNonce,
       );
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
@@ -331,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.3.7-ci',
+                  'v1.3.8-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
