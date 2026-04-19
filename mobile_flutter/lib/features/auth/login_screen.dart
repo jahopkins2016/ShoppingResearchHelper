@@ -52,6 +52,65 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final resetEmailCtrl = TextEditingController(text: _emailCtrl.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Enter your account email and we'll send you a link to reset your password.",
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: resetEmailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, resetEmailCtrl.text.trim()),
+            child: const Text('Send link'),
+          ),
+        ],
+      ),
+    );
+    if (email == null || email.isEmpty) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await _supabase.auth.resetPasswordForEmail(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password reset link sent to $email')),
+        );
+      }
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _googleSignIn() async {
     setState(() {
       _loading = true;
@@ -161,6 +220,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: const TextStyle(color: AppTheme.danger, fontSize: 13),
                 ),
               ],
+              if (!_isSignUp) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: _loading ? null : _forgotPassword,
+                    child: const Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _loading ? null : _emailAuth,
@@ -221,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Center(
                 child: Text(
-                  'v1.2.0-ci',
+                  'v1.3.0-ci',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
