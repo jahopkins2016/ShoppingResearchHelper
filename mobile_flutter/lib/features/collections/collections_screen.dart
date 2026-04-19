@@ -173,20 +173,32 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
     final collectionIds =
         list.map((c) => c['id']).whereType<String>().toList();
     if (collectionIds.isNotEmpty) {
+      // Fetch items with images first, then fill gaps with favicon fallbacks.
       final thumbs = await _supabase
           .from('items')
-          .select('collection_id, image_url')
+          .select('collection_id, image_url, source_url')
           .inFilter('collection_id', collectionIds)
-          .not('image_url', 'is', null)
-          .limit(4 * collectionIds.length);
+          .limit(8 * collectionIds.length);
 
       final thumbMap = <String, List<String>>{};
       for (final t in thumbs) {
         final cid = t['collection_id'] as String;
+        thumbMap.putIfAbsent(cid, () => []);
+        if (thumbMap[cid]!.length >= 4) continue;
+
         final url = t['image_url'] as String?;
         if (url != null && url.isNotEmpty) {
-          thumbMap.putIfAbsent(cid, () => []);
-          if (thumbMap[cid]!.length < 4) thumbMap[cid]!.add(url);
+          thumbMap[cid]!.add(url);
+        } else {
+          // Favicon fallback for items without a product image
+          final sourceUrl = t['source_url'] as String?;
+          if (sourceUrl != null) {
+            final uri = Uri.tryParse(sourceUrl);
+            if (uri != null && uri.host.isNotEmpty) {
+              thumbMap[cid]!.add(
+                  'https://www.google.com/s2/favicons?domain=${uri.host}&sz=128');
+            }
+          }
         }
       }
       for (final c in list) {

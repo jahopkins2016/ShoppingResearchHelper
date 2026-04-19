@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -60,27 +60,54 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final userId = context.read<AuthProvider>().userId;
     final email = _supabase.auth.currentUser?.email ?? '';
 
-    // Bidirectional: find all users from collection_shares where I shared
-    // or was shared with
-    final sharesData = await _supabase
-        .from('collection_shares')
-        .select('shared_by, profiles!collection_shares_shared_by_fkey(id)')
-        .eq('shared_with_email', email)
-        .eq('status', 'accepted');
+    final uniqueIds = <String>{};
 
-    final uniqueIds = (sharesData as List)
-        .map((s) =>
-            (s['profiles'] as Map<String, dynamic>?)?['id'] as String?)
-        .where((id) => id != null && id != userId)
-        .toSet();
+    try {
+      // Direction 1: collections shared WITH me (accepted) → get the sharer's profile id
+      final sharedWithMe = await _supabase
+          .from('collection_shares')
+          .select('shared_by')
+          .eq('shared_with_email', email)
+          .eq('status', 'accepted');
 
-    for (final friendId in uniqueIds) {
-      if (friendId == null) continue;
-      await _supabase.from('friends').upsert(
-        {'user_id': userId, 'friend_user_id': friendId},
-        onConflict: 'user_id,friend_user_id',
-        ignoreDuplicates: true,
-      );
+      for (final row in sharedWithMe as List) {
+        final id = row['shared_by'] as String?;
+        if (id != null && id != userId) uniqueIds.add(id);
+      }
+
+      // Direction 2: collections I shared with others (accepted) → look up their user id by email
+      final sharedByMe = await _supabase
+          .from('collection_shares')
+          .select('shared_with_email')
+          .eq('shared_by', userId!)
+          .eq('status', 'accepted');
+
+      final emailsToResolve = (sharedByMe as List)
+          .map((r) => r['shared_with_email'] as String?)
+          .where((e) => e != null && e.isNotEmpty)
+          .cast<String>()
+          .toList();
+
+      if (emailsToResolve.isNotEmpty) {
+        final profiles = await _supabase
+            .from('profiles')
+            .select('id')
+            .inFilter('email', emailsToResolve);
+        for (final p in profiles as List) {
+          final id = p['id'] as String?;
+          if (id != null && id != userId) uniqueIds.add(id);
+        }
+      }
+
+      for (final friendId in uniqueIds) {
+        await _supabase.from('friends').upsert(
+          {'user_id': userId, 'friend_user_id': friendId},
+          onConflict: 'user_id,friend_user_id',
+          ignoreDuplicates: true,
+        );
+      }
+    } catch (e, st) {
+      debugPrint('Error syncing friends: $e\n$st');
     }
 
     await _load();
@@ -97,49 +124,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _load();
   }
 
-  Future<void> _message(Map<String, dynamic> profile) async {
-    final userId = context.read<AuthProvider>().userId;
-    final friendId = profile['id'] as String?;
-    if (friendId == null || userId == null) return;
-
-    // Find existing conversation
-    final participants = await _supabase
-        .from('conversation_participants')
-        .select('conversation_id')
-        .eq('user_id', userId);
-
-    final myConvIds =
-        (participants as List).map((p) => p['conversation_id']).toSet();
-
-    final friendParts = await _supabase
-        .from('conversation_participants')
-        .select('conversation_id')
-        .eq('user_id', friendId);
-
-    final friendConvIds =
-        (friendParts as List).map((p) => p['conversation_id']).toSet();
-
-    final shared =
-        myConvIds.intersection(friendConvIds).firstOrNull;
-
-    if (shared != null) {
-      if (mounted) context.push('/messages/$shared');
-      return;
-    }
-
-    // Create new conversation
-    final conv = await _supabase
-        .from('conversations')
-        .insert({'last_message': null})
-        .select()
-        .single();
-
-    await _supabase.from('conversation_participants').insert([
-      {'conversation_id': conv['id'], 'user_id': userId},
-      {'conversation_id': conv['id'], 'user_id': friendId},
-    ]);
-
-    if (mounted) context.push('/messages/${conv['id']}');
+  void _inviteFriend() {
+    const siteUrl = 'https://web-weld-two-36.vercel.app';
+    final profile = _supabase.auth.currentUser;
+    final code = profile?.userMetadata?['referral_code'] as String?;
+    final url = code != null ? '$siteUrl/join?ref=$code' : siteUrl;
+    Share.share(
+      'Join me on SaveIt — the smart product bookmarking app! $url',
+      subject: 'Join me on SaveIt',
+    );
   }
 
   @override
@@ -165,6 +158,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _inviteFriend,
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.person_add_outlined),
+        label: const Text('Invite Friend'),
+      ),
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primary))
@@ -188,7 +188,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                       Theme.of(context).textTheme.titleMedium),
                               const SizedBox(height: 8),
                               Text(
-                                  'Tap sync to add friends from\nyour shared collections',
+                                  'Invite friends or tap sync to add people\nfrom your shared collections',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.bodyMedium),
                               const SizedBox(height: 24),
@@ -201,7 +201,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           ),
                         )
                       : ListView.separated(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                           itemCount: _friends.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 4),
@@ -220,24 +220,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                       Theme.of(context).textTheme.titleSmall),
                               subtitle:
                                   Text(profile?['email'] ?? ''),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.chat_bubble_outline,
-                                        color: AppTheme.primary),
-                                    onPressed: () =>
-                                        _message(profile ?? {}),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.person_remove_outlined,
-                                        color: AppTheme.danger),
-                                    onPressed: () => _removeFriend(
-                                        profile?['id'] ?? ''),
-                                  ),
-                                ],
+                              trailing: IconButton(
+                                icon: const Icon(
+                                    Icons.person_remove_outlined,
+                                    color: AppTheme.danger),
+                                onPressed: () => _removeFriend(
+                                    profile?['id'] ?? ''),
                               ),
                             );
                           },

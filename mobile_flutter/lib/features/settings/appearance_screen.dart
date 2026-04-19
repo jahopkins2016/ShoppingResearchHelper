@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
 class AppearanceScreen extends StatefulWidget {
@@ -9,18 +11,17 @@ class AppearanceScreen extends StatefulWidget {
 }
 
 class _AppearanceScreenState extends State<AppearanceScreen> {
-  String _theme = 'system';
-  double _fontSize = 1.0; // scale factor
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final currentTheme = themeProvider.themeName;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Appearance')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Theme',
-              style: Theme.of(context).textTheme.titleSmall),
+          Text('Theme', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ...([
             ('system', 'System default', Icons.brightness_auto_outlined),
@@ -32,43 +33,17 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 trailing: Radio<String>(
                   value: t.$1,
                   // ignore: deprecated_member_use
-                  groupValue: _theme,
+                  groupValue: currentTheme,
                   // ignore: deprecated_member_use
-                  onChanged: (v) => setState(() => _theme = v!),
+                  onChanged: (v) {
+                    if (v != null) context.read<ThemeProvider>().setTheme(v);
+                  },
                   activeColor: AppTheme.primary,
                 ),
-                onTap: () => setState(() => _theme = t.$1),
+                onTap: () => context.read<ThemeProvider>().setTheme(t.$1),
               ))),
-          const SizedBox(height: 20),
-          Text('Text Size',
-              style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Slider(
-            value: _fontSize,
-            min: 0.8,
-            max: 1.4,
-            divisions: 6,
-            label: _scaleName(_fontSize),
-            activeColor: AppTheme.primary,
-            onChanged: (v) => setState(() => _fontSize = v),
-          ),
-          Center(
-            child: Text(
-              'Preview text at ${_scaleName(_fontSize)}',
-              style: TextStyle(fontSize: 14 * _fontSize),
-            ),
-          ),
         ],
       ),
     );
-  }
-
-  String _scaleName(double v) {
-    if (v <= 0.8) return 'Smallest';
-    if (v <= 0.9) return 'Small';
-    if (v <= 1.05) return 'Default';
-    if (v <= 1.2) return 'Large';
-    if (v <= 1.3) return 'Larger';
-    return 'Largest';
   }
 }

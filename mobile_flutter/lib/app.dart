@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'core/providers/auth_provider.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/services/share_intent_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
@@ -207,6 +208,8 @@ class _SaveItAppState extends State<SaveItApp> {
     return MaterialApp.router(
       title: 'SaveIt',
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

@@ -532,6 +532,17 @@ class _ItemCard extends StatelessWidget {
         imageUri = photos.first?.toString();
       }
     }
+    // Favicon fallback so items never show a blank placeholder
+    if (imageUri == null) {
+      final sourceUrl = item['source_url'] as String?;
+      if (sourceUrl != null) {
+        final uri = Uri.tryParse(sourceUrl);
+        if (uri != null && uri.host.isNotEmpty) {
+          imageUri =
+              'https://www.google.com/s2/favicons?domain=${uri.host}&sz=128';
+        }
+      }
+    }
     final hist = isInStore
         ? const <Map<String, dynamic>>[]
         : List<Map<String, dynamic>>.from(item['price_history'] ?? []);

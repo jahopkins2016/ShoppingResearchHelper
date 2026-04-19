@@ -51,9 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _shareReferral() {
     final code = _profile?['referral_code'] as String?;
-    if (code == null) return;
     const siteUrl = 'https://web-weld-two-36.vercel.app';
-    final url = '$siteUrl/join?ref=$code';
+    final url = code != null ? '$siteUrl/join?ref=$code' : siteUrl;
     Share.share(
       'Join me on SaveIt — the smart product bookmarking app! $url',
       subject: 'Join me on SaveIt',
