@@ -369,3 +369,32 @@ end $$;
 create index if not exists idx_items_source on public.items (source);
 create index if not exists idx_items_captured_at on public.items (captured_at desc)
   where source = 'in_store';
+
+-- Authenticated users can write their own in-store capture photos into
+-- item-images/captures/<uid>/. Service role (enrich-item) bypasses RLS.
+drop policy if exists "item_images_user_insert" on storage.objects;
+create policy "item_images_user_insert" on storage.objects
+  for insert with check (
+    bucket_id = 'item-images'
+    and auth.role() = 'authenticated'
+    and (storage.foldername(name))[1] = 'captures'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );
+
+drop policy if exists "item_images_user_update" on storage.objects;
+create policy "item_images_user_update" on storage.objects
+  for update using (
+    bucket_id = 'item-images'
+    and auth.role() = 'authenticated'
+    and (storage.foldername(name))[1] = 'captures'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );
+
+drop policy if exists "item_images_user_delete" on storage.objects;
+create policy "item_images_user_delete" on storage.objects
+  for delete using (
+    bucket_id = 'item-images'
+    and auth.role() = 'authenticated'
+    and (storage.foldername(name))[1] = 'captures'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );

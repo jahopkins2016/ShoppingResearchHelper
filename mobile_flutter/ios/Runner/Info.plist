@@ -111,5 +111,9 @@
 	<string>SaveIt can save captured item photos back to your photo library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SaveIt uses your location to identify the store you're shopping in so in-store captures are tagged automatically.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SaveIt uses your location to identify the store you're shopping in so in-store captures are tagged automatically.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>SaveIt uses your location to identify the store you're shopping in so in-store captures are tagged automatically.</string>
 </dict>
 </plist>
