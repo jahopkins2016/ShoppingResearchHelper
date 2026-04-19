@@ -26,11 +26,24 @@ function LoginForm() {
   const router = useRouter();
   const supabase = createClient();
 
+  function getPostLoginNext(): string {
+    const inviteToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('saveit_invite='))
+      ?.split('=')[1];
+    if (inviteToken) {
+      document.cookie = 'saveit_invite=; Max-Age=0; path=/';
+      return `/join?invite=${encodeURIComponent(inviteToken)}`;
+    }
+    return '/collections';
+  }
+
   async function handleGoogleSignIn() {
+    const next = getPostLoginNext();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/collections`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
     if (error) setError(error.message);
@@ -57,7 +70,7 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      router.push("/collections");
+      router.push(getPostLoginNext());
       router.refresh();
     } else {
       const { error } = await supabase.auth.signUp({ email, password });

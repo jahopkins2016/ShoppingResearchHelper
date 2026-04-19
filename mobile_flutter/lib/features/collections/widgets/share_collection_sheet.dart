@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -32,6 +33,11 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
   List<Map<String, dynamic>> _shares = [];
 
   String get _publicUrl => '$_siteUrl/c/${widget.collection['id']}';
+  String? get _inviteUrl {
+    final token = widget.collection['invite_token'] as String?;
+    if (token == null || token.isEmpty) return null;
+    return '$_siteUrl/join?invite=$token';
+  }
 
   @override
   void initState() {
@@ -69,6 +75,34 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Link copied')),
+    );
+  }
+
+  Future<void> _shareInviteLink() async {
+    var url = _inviteUrl;
+    if (url == null) {
+      // Collection row didn't include invite_token — fetch/generate one and
+      // reflect it on the widget's collection map for subsequent shares.
+      final row = await _supabase
+          .from('collections')
+          .select('invite_token')
+          .eq('id', widget.collection['id'])
+          .single();
+      final token = row['invite_token'] as String?;
+      if (token == null || token.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not generate invite link')),
+        );
+        return;
+      }
+      widget.collection['invite_token'] = token;
+      url = '$_siteUrl/join?invite=$token';
+    }
+    final name = widget.collection['name'] as String? ?? 'Collection';
+    await Share.share(
+      'Check out my SaveIt collection "$name": $url',
+      subject: name,
     );
   }
 
@@ -146,7 +180,26 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 20),
 
-            // Primary: invite by email
+            // Primary action: native share sheet with invite link
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _shareInviteLink,
+                icon: const Icon(Icons.ios_share, size: 18),
+                label: const Text('Share invite link'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Anyone with the link can join as a viewer.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+
+            const SizedBox(height: 24),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+
+            // Secondary: invite by email (can grant editor role)
             Text('Invite by email',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),

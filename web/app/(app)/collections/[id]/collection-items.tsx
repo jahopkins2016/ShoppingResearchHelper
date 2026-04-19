@@ -66,13 +66,17 @@ interface SimilarProduct {
 export default function CollectionItems({
   initialItems,
   collectionId,
+  collectionName,
   initialArchivedAt,
   initialIsPublic,
+  initialInviteToken,
 }: {
   initialItems: Item[];
   collectionId: string;
+  collectionName?: string;
   initialArchivedAt?: string | null;
   initialIsPublic?: boolean;
+  initialInviteToken?: string | null;
 }) {
   const [items, setItems] = useState<Item[]>(initialItems);
   const [archivedAt, setArchivedAt] = useState<string | null>(
@@ -81,6 +85,9 @@ export default function CollectionItems({
   const [archiving, setArchiving] = useState(false);
   const [isPublic, setIsPublic] = useState<boolean>(initialIsPublic ?? false);
   const [togglingPublic, setTogglingPublic] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(
+    initialInviteToken ?? null
+  );
   const [expandedHistory, setExpandedHistory] = useState<Set<string>>(
     new Set()
   );
@@ -218,6 +225,47 @@ export default function CollectionItems({
       setTimeout(() => setShareMsg(null), 1500);
     } catch {
       setShareMsg("Could not copy link");
+    }
+  }
+
+  async function resolveInviteToken(): Promise<string | null> {
+    if (inviteToken) return inviteToken;
+    const { data, error } = await supabase
+      .from("collections")
+      .select("invite_token")
+      .eq("id", collectionId)
+      .single();
+    if (error || !data?.invite_token) return null;
+    setInviteToken(data.invite_token as string);
+    return data.invite_token as string;
+  }
+
+  async function handleShareInviteLink() {
+    const token = await resolveInviteToken();
+    if (!token) {
+      setShareMsg("Could not generate invite link");
+      return;
+    }
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/join?invite=${token}`;
+    const name = collectionName ?? "this collection";
+    const title = collectionName ?? "SaveIt Collection";
+    const text = `Check out my SaveIt collection "${name}": ${url}`;
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to clipboard.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg("Invite link copied!");
+      setTimeout(() => setShareMsg(null), 1500);
+    } catch {
+      setShareMsg("Could not copy invite link");
     }
   }
 
@@ -377,6 +425,7 @@ export default function CollectionItems({
             togglingPublic={togglingPublic}
             onTogglePublic={handleTogglePublic}
             onCopyLink={handleCopyPublicLink}
+            onShareInviteLink={handleShareInviteLink}
             collectionId={collectionId}
             onCancel={() => {
               setShowShareModal(false);
@@ -668,6 +717,7 @@ export default function CollectionItems({
           togglingPublic={togglingPublic}
           onTogglePublic={handleTogglePublic}
           onCopyLink={handleCopyPublicLink}
+          onShareInviteLink={handleShareInviteLink}
           collectionId={collectionId}
           onCancel={() => {
             setShowShareModal(false);
@@ -770,6 +820,7 @@ function ShareModal({
   togglingPublic,
   onTogglePublic,
   onCopyLink,
+  onShareInviteLink,
   collectionId,
 }: {
   email: string;
@@ -784,6 +835,7 @@ function ShareModal({
   togglingPublic: boolean;
   onTogglePublic: (next: boolean) => void;
   onCopyLink: () => void;
+  onShareInviteLink: () => void;
   collectionId: string;
 }) {
   const publicUrl =
@@ -808,6 +860,18 @@ function ShareModal({
             {message}
           </p>
         )}
+        <button
+          type="button"
+          className={styles.modalSave}
+          onClick={onShareInviteLink}
+          style={{ width: "100%", marginBottom: 8 }}
+        >
+          Share invite link
+        </button>
+        <p className={styles.shareHint}>
+          Anyone with the link can join as a viewer. Use email invites below to
+          grant editor access.
+        </p>
         <input
           type="email"
           className={styles.modalInput}

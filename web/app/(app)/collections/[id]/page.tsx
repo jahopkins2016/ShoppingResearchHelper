@@ -63,8 +63,10 @@ export default async function CollectionDetailPage({
       <CollectionItems
         initialItems={items ?? []}
         collectionId={id}
+        collectionName={collection.name}
         initialArchivedAt={collection.archived_at ?? null}
         initialIsPublic={collection.is_public ?? false}
+        initialInviteToken={collection.invite_token ?? null}
       />
     </div>
   );

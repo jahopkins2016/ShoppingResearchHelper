@@ -55,6 +55,7 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === "/join") {
     const ref = request.nextUrl.searchParams.get("ref");
     const shareId = request.nextUrl.searchParams.get("share_id");
+    const invite = request.nextUrl.searchParams.get("invite");
 
     if (ref) {
       supabaseResponse.cookies.set("saveit_ref", ref, {
@@ -70,6 +71,15 @@ export async function middleware(request: NextRequest) {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+
+    if (invite) {
+      supabaseResponse.cookies.set("saveit_invite", invite, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: false,
         sameSite: "lax",
       });
     }

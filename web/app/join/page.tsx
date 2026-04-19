@@ -6,9 +6,78 @@ import styles from "./page.module.css";
 export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; share_id?: string }>;
+  searchParams: Promise<{ ref?: string; share_id?: string; invite?: string }>;
 }) {
-  const { ref, share_id } = await searchParams;
+  const { ref, share_id, invite } = await searchParams;
+
+  // Handle invite-link flow (anyone with link joins as viewer)
+  if (invite) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: collectionId, error } = await supabase.rpc(
+        "accept_collection_invite",
+        { p_token: invite }
+      );
+      if (!error && collectionId) {
+        redirect(`/collections/${collectionId}`);
+      }
+      redirect("/collections");
+    }
+
+    const { data: details } = await supabase.rpc(
+      "get_collection_by_invite_token",
+      { p_token: invite }
+    );
+    const first = Array.isArray(details) ? details[0] : details;
+    const collectionName = first?.name as string | undefined;
+    const sharerName = first?.owner_name as string | undefined;
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.topBar} />
+
+        <div className={styles.card}>
+          <div className={styles.logoWrap}>
+            <img className={styles.logoIcon} src="/saveit-icon.svg" alt="SaveIt" />
+            <h1 className={styles.logo}>SaveIt</h1>
+          </div>
+
+          <div className={styles.inviteMessage}>
+            {sharerName && collectionName ? (
+              <p className={styles.headline}>
+                <strong>{sharerName}</strong> shared{" "}
+                <strong>&ldquo;{collectionName}&rdquo;</strong> with you!
+              </p>
+            ) : collectionName ? (
+              <p className={styles.headline}>
+                You&apos;ve been invited to <strong>&ldquo;{collectionName}&rdquo;</strong>!
+              </p>
+            ) : (
+              <p className={styles.headline}>
+                You&apos;ve been invited to a collection!
+              </p>
+            )}
+            <p className={styles.subtext}>
+              Sign in or create an account to view the collection.
+            </p>
+          </div>
+
+          <Link href="/login" className={styles.signUpButton}>
+            Sign In →
+          </Link>
+
+          <p className={styles.loginNote}>
+            Don&apos;t have an account?{" "}
+            <Link href="/login?mode=signup">Sign up</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Handle share invitation links
   if (share_id) {

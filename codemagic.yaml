@@ -87,8 +87,31 @@ workflows:
           # ANDROID_DEBUG_KEYSTORE_B64 must be in the saveit_env group.
           # This ensures Google Sign-In works — the SHA-1 matches what's
           # registered in Google Cloud Console.
+          if [ -z "$ANDROID_DEBUG_KEYSTORE_B64" ]; then
+            echo "ANDROID_DEBUG_KEYSTORE_B64 env var is not set" >&2
+            exit 1
+          fi
           mkdir -p ~/.android
-          printf '%s' "$ANDROID_DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          # Strip whitespace/newlines before decoding — pasted values from the
+          # Codemagic UI often include wrap breaks that macOS's strict base64
+          # decoder rejects (producing invalid keystore bytes).
+          printf '%s' "$ANDROID_DEBUG_KEYSTORE_B64" \
+            | tr -d '[:space:]' \
+            | openssl base64 -d -A > ~/.android/debug.keystore
+          # Verify decoded keystore is a valid keystore: JKS (magic FEEDFEED)
+          # or PKCS12 (ASN.1 SEQUENCE, starts with 0x30 0x82).
+          MAGIC=$(head -c 4 ~/.android/debug.keystore | xxd -p)
+          case "$MAGIC" in
+            feedfeed*|3082*) ;;
+            *)
+              echo "Decoded keystore is not a valid JKS/PKCS12 file (magic: $MAGIC). Check ANDROID_DEBUG_KEYSTORE_B64." >&2
+              ls -la ~/.android/debug.keystore >&2
+              head -c 32 ~/.android/debug.keystore | xxd >&2 || true
+              exit 1
+              ;;
+          esac
+          echo "Debug keystore restored successfully ($(wc -c < ~/.android/debug.keystore) bytes)"
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep -E 'SHA1|SHA-1' || true
       - name: Get Flutter packages
         script: |
           flutter pub get
