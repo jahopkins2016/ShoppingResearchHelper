@@ -2,29 +2,53 @@ import UIKit
 import Social
 import UniformTypeIdentifiers
 
-// Writes shared items in the exact format the receive_sharing_intent
-// Flutter plugin expects (array of SharedMediaFile-compatible dicts) and
-// opens the host app via the ShareMedia-<bundle_id>:share URL scheme.
-class ShareViewController: UIViewController {
+// Auto-submitting share extension.
+// Subclasses SLComposeServiceViewController (the canonical share-extension
+// base class) and immediately triggers save + redirect without showing the
+// compose UI. Writes items in the format receive_sharing_intent expects and
+// launches the host app via ShareMedia-<bundleId>:share.
+class ShareViewController: SLComposeServiceViewController {
 
     private let appGroupId = "group.com.saveit.saveit"
     private let hostBundleId = "com.jahopkins.saveit"
     private let shareKey = "ShareKey"
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func isContentValid() -> Bool {
+        return true
+    }
+
+    override func configurationItems() -> [Any]! {
+        return []
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Hide the compose sheet so the user only sees a brief flash.
+        view.isHidden = true
         handleSharedItems()
+    }
+
+    override func didSelectPost() {
+        // Not reachable in our auto-submit flow, but required by the base.
+        extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
     }
 
     private func handleSharedItems() {
         guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
               let providers = extensionItem.attachments, !providers.isEmpty else {
-            completeRequest()
+            completeAndRedirect(saved: false)
             return
         }
 
         let group = DispatchGroup()
         var sharedItems: [[String: Any]] = []
+        let itemsLock = NSLock()
+
+        func append(_ entry: [String: Any]) {
+            itemsLock.lock()
+            sharedItems.append(entry)
+            itemsLock.unlock()
+        }
 
         for provider in providers {
             let urlType = "public.url"
@@ -33,43 +57,45 @@ class ShareViewController: UIViewController {
             if provider.hasItemConformingToTypeIdentifier(urlType) {
                 group.enter()
                 provider.loadItem(forTypeIdentifier: urlType, options: nil) { item, _ in
+                    defer { group.leave() }
                     if let url = item as? URL {
-                        sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
+                        append(self.makeEntry(path: url.absoluteString, type: "url"))
                     } else if let str = item as? String, let url = URL(string: str) {
-                        sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
+                        append(self.makeEntry(path: url.absoluteString, type: "url"))
                     }
-                    group.leave()
                 }
             } else if provider.hasItemConformingToTypeIdentifier(textType) {
                 group.enter()
                 provider.loadItem(forTypeIdentifier: textType, options: nil) { item, _ in
+                    defer { group.leave() }
                     if let text = item as? String {
-                        // If the text is actually a URL, classify as url; else as text
                         if let url = URL(string: text), url.scheme != nil {
-                            sharedItems.append(self.makeEntry(path: url.absoluteString, type: "url"))
+                            append(self.makeEntry(path: url.absoluteString, type: "url"))
                         } else {
-                            sharedItems.append(self.makeEntry(path: text, type: "text", mimeType: "text/plain"))
+                            append(self.makeEntry(path: text, type: "text", mimeType: "text/plain"))
                         }
                     }
-                    group.leave()
                 }
             }
         }
 
-        group.notify(queue: .main) { [weak self] in
-            guard let self = self else { return }
-            if !sharedItems.isEmpty,
-               let jsonData = try? JSONSerialization.data(withJSONObject: sharedItems) {
-                let defaults = UserDefaults(suiteName: self.appGroupId)
-                defaults?.set(jsonData, forKey: self.shareKey)
-                defaults?.synchronize()
+        // Safety timeout so we never hang the share sheet forever.
+        let timeout = DispatchTime.now() + .seconds(5)
+        DispatchQueue.global().async {
+            let result = group.wait(timeout: timeout)
+            DispatchQueue.main.async {
+                if !sharedItems.isEmpty,
+                   let jsonData = try? JSONSerialization.data(withJSONObject: sharedItems) {
+                    let defaults = UserDefaults(suiteName: self.appGroupId)
+                    defaults?.set(jsonData, forKey: self.shareKey)
+                    defaults?.synchronize()
+                }
+                self.completeAndRedirect(saved: result == .success && !sharedItems.isEmpty)
             }
-            self.openHostApp()
         }
     }
 
     private func makeEntry(path: String, type: String, mimeType: String? = nil) -> [String: Any] {
-        // Fields match SharedMediaFile (Codable) in receive_sharing_intent.
         var dict: [String: Any] = [
             "path": path,
             "type": type,
@@ -80,32 +106,44 @@ class ShareViewController: UIViewController {
         return dict
     }
 
-    private func openHostApp() {
-        guard let url = URL(string: "ShareMedia-\(hostBundleId):share") else {
-            completeRequest()
-            return
+    private func completeAndRedirect(saved: Bool) {
+        if saved, let url = URL(string: "ShareMedia-\(hostBundleId):share") {
+            openURL(url)
         }
-        var responder: UIResponder? = self
-        if #available(iOS 18.0, *) {
-            while responder != nil {
-                if let app = responder as? UIApplication {
-                    app.open(url, options: [:], completionHandler: nil)
-                }
-                responder = responder?.next
-            }
-        } else {
-            let selector = sel_registerName("openURL:")
-            while responder != nil {
-                if responder?.responds(to: selector) == true {
-                    _ = responder?.perform(selector, with: url)
-                }
-                responder = responder?.next
-            }
-        }
-        completeRequest()
+        extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
     }
 
-    private func completeRequest() {
-        extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+    // Walks the responder chain looking for a UIApplication we can call
+    // open(_:) on. This is the long-standing workaround share extensions use
+    // to launch their host app. Works on both iOS <18 and iOS 18+.
+    @discardableResult
+    private func openURL(_ url: URL) -> Bool {
+        var responder: UIResponder? = self
+        while responder != nil {
+            if let app = responder as? UIApplication {
+                if #available(iOS 18.0, *) {
+                    app.open(url, options: [:], completionHandler: nil)
+                    return true
+                } else {
+                    let selector = sel_registerName("openURL:")
+                    if app.responds(to: selector) {
+                        _ = app.perform(selector, with: url)
+                        return true
+                    }
+                }
+            }
+            responder = responder?.next
+        }
+        // Fallback: try the selector trick on any responder (pre-iOS 18).
+        let selector = sel_registerName("openURL:")
+        responder = self
+        while responder != nil {
+            if responder?.responds(to: selector) == true {
+                _ = responder?.perform(selector, with: url)
+                return true
+            }
+            responder = responder?.next
+        }
+        return false
     }
 }
