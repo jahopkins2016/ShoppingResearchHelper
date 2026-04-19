@@ -66,11 +66,21 @@ interface SimilarProduct {
 export default function CollectionItems({
   initialItems,
   collectionId,
+  initialArchivedAt,
+  initialIsPublic,
 }: {
   initialItems: Item[];
   collectionId: string;
+  initialArchivedAt?: string | null;
+  initialIsPublic?: boolean;
 }) {
   const [items, setItems] = useState<Item[]>(initialItems);
+  const [archivedAt, setArchivedAt] = useState<string | null>(
+    initialArchivedAt ?? null
+  );
+  const [archiving, setArchiving] = useState(false);
+  const [isPublic, setIsPublic] = useState<boolean>(initialIsPublic ?? false);
+  const [togglingPublic, setTogglingPublic] = useState(false);
   const [expandedHistory, setExpandedHistory] = useState<Set<string>>(
     new Set()
   );
@@ -175,6 +185,42 @@ export default function CollectionItems({
     }
   }
 
+  async function handleToggleArchive() {
+    if (archiving) return;
+    setArchiving(true);
+    const nextValue = archivedAt ? null : new Date().toISOString();
+    const { error } = await supabase
+      .from("collections")
+      .update({ archived_at: nextValue })
+      .eq("id", collectionId);
+    setArchiving(false);
+    if (!error) setArchivedAt(nextValue);
+  }
+
+  async function handleTogglePublic(next: boolean) {
+    if (togglingPublic) return;
+    setTogglingPublic(true);
+    const { error } = await supabase
+      .from("collections")
+      .update({ is_public: next })
+      .eq("id", collectionId);
+    setTogglingPublic(false);
+    if (!error) setIsPublic(next);
+  }
+
+  async function handleCopyPublicLink() {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/c/${collectionId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg("Link copied!");
+      setTimeout(() => setShareMsg(null), 1500);
+    } catch {
+      setShareMsg("Could not copy link");
+    }
+  }
+
   async function dismissPriceDrop(itemId: string) {
     await supabase
       .from("items")
@@ -276,6 +322,13 @@ export default function CollectionItems({
         <div className={styles.addButtonWrap}>
           <button
             className={styles.shareButton}
+            onClick={handleToggleArchive}
+            disabled={archiving}
+          >
+            {archivedAt ? "Unarchive" : "Archive"}
+          </button>
+          <button
+            className={styles.shareButton}
             onClick={() => setShowShareModal(true)}
           >
             Share
@@ -287,6 +340,12 @@ export default function CollectionItems({
             + Add Item
           </button>
         </div>
+        {archivedAt && (
+          <div className={styles.archivedNotice}>
+            This collection is archived. It&apos;s hidden from your default
+            collections view.
+          </div>
+        )}
         <div className={styles.empty}>
           <p className={styles.emptyText}>No items yet.</p>
           <p className={styles.emptySubtext}>
@@ -314,6 +373,11 @@ export default function CollectionItems({
             sharing={sharing}
             message={shareMsg}
             onShare={handleShare}
+            isPublic={isPublic}
+            togglingPublic={togglingPublic}
+            onTogglePublic={handleTogglePublic}
+            onCopyLink={handleCopyPublicLink}
+            collectionId={collectionId}
             onCancel={() => {
               setShowShareModal(false);
               setShareEmail("");
@@ -330,6 +394,13 @@ export default function CollectionItems({
       <div className={styles.addButtonWrap}>
         <button
           className={styles.shareButton}
+          onClick={handleToggleArchive}
+          disabled={archiving}
+        >
+          {archivedAt ? "Unarchive" : "Archive"}
+        </button>
+        <button
+          className={styles.shareButton}
           onClick={() => setShowShareModal(true)}
         >
           Share
@@ -341,6 +412,12 @@ export default function CollectionItems({
           + Add Item
         </button>
       </div>
+      {archivedAt && (
+        <div className={styles.archivedNotice}>
+          This collection is archived. It&apos;s hidden from your default
+          collections view.
+        </div>
+      )}
       <div className={styles.grid}>
         {items.map((item) => {
           const history = [...(item.price_history ?? [])].sort(
@@ -587,6 +664,11 @@ export default function CollectionItems({
           sharing={sharing}
           message={shareMsg}
           onShare={handleShare}
+          isPublic={isPublic}
+          togglingPublic={togglingPublic}
+          onTogglePublic={handleTogglePublic}
+          onCopyLink={handleCopyPublicLink}
+          collectionId={collectionId}
           onCancel={() => {
             setShowShareModal(false);
             setShareEmail("");
@@ -684,6 +766,11 @@ function ShareModal({
   message,
   onShare,
   onCancel,
+  isPublic,
+  togglingPublic,
+  onTogglePublic,
+  onCopyLink,
+  collectionId,
 }: {
   email: string;
   setEmail: (v: string) => void;
@@ -693,7 +780,16 @@ function ShareModal({
   message: string | null;
   onShare: () => void;
   onCancel: () => void;
+  isPublic: boolean;
+  togglingPublic: boolean;
+  onTogglePublic: (next: boolean) => void;
+  onCopyLink: () => void;
+  collectionId: string;
 }) {
+  const publicUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/c/${collectionId}`
+      : `/c/${collectionId}`;
   return (
     <div className={styles.modalOverlay} onClick={onCancel}>
       <div
@@ -704,7 +800,7 @@ function ShareModal({
         {message && (
           <p
             className={
-              message.startsWith("Failed")
+              message.startsWith("Failed") || message.startsWith("Could not")
                 ? styles.shareError
                 : styles.shareSuccess
             }
@@ -757,6 +853,39 @@ function ShareModal({
           >
             {sharing ? "Sending…" : "Send Invite"}
           </button>
+        </div>
+
+        <div className={styles.publicLinkSection}>
+          <label className={styles.publicToggleRow}>
+            <span className={styles.publicToggleLabel}>
+              <strong>Also make this collection public</strong>
+              <small>Anyone with the link can view it on the web.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={isPublic}
+              disabled={togglingPublic}
+              onChange={(e) => onTogglePublic(e.target.checked)}
+            />
+          </label>
+          {isPublic && (
+            <div className={styles.publicLinkRow}>
+              <input
+                type="text"
+                readOnly
+                value={publicUrl}
+                className={styles.publicLinkInput}
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <button
+                type="button"
+                className={styles.copyLinkBtn}
+                onClick={onCopyLink}
+              >
+                Copy link
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

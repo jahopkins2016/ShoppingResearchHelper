@@ -530,6 +530,21 @@
   background: var(--color-surface-container-highest);
 }
 
+.shareButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.archivedNotice {
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: var(--color-surface-container-low);
+  border-left: 3px solid var(--color-outline-variant);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 /* Share modal extras */
 .roleSelect {
   display: flex;
@@ -557,6 +572,69 @@
   font-size: 13px;
   color: var(--color-success);
   margin-bottom: 12px;
+}
+
+/* Public link section in share modal */
+.publicLinkSection {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.publicToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.publicToggleLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.publicToggleLabel small {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.publicLinkRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.publicLinkInput {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 8px;
+  background: var(--color-surface-container-low);
+  color: var(--color-text-secondary);
+  outline: none;
+}
+
+.copyLinkBtn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-container-high);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.copyLinkBtn:hover {
+  background: var(--color-surface-container-highest);
 }
 
 /* Inspect button on card */

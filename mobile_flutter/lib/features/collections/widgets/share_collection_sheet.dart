@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -71,11 +70,6 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Link copied')),
     );
-  }
-
-  Future<void> _shareLink() async {
-    await Share.share(_publicUrl,
-        subject: widget.collection['name'] as String? ?? 'Collection');
   }
 
   Future<void> _invite() async {
@@ -152,50 +146,7 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 20),
 
-            // Public link
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: _isPublic,
-              onChanged: _togglePublic,
-              title: const Text('Anyone with the link can view'),
-              subtitle: const Text(
-                  'Makes this collection public on the web.'),
-              activeThumbColor: AppTheme.primary,
-            ),
-            if (_isPublic) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppTheme.placeholder,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _publicUrl,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 18),
-                      tooltip: 'Copy link',
-                      onPressed: _copyLink,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.ios_share, size: 18),
-                      tooltip: 'Share',
-                      onPressed: _shareLink,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
+            // Primary: invite by email
             Text('Invite by email',
                 style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
@@ -253,6 +204,48 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
                       onPressed: () => _revoke(s['id']),
                     ),
                   )),
+            ],
+
+            const SizedBox(height: 24),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+
+            // Secondary: public link toggle
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: _isPublic,
+              onChanged: _togglePublic,
+              title: const Text('Also make this collection public'),
+              subtitle: const Text(
+                  'Anyone with the link can view it on the web.'),
+              activeThumbColor: AppTheme.primary,
+            ),
+            if (_isPublic) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.placeholder,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _publicUrl,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _copyLink,
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy link'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ],
         ),

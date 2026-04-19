@@ -37,6 +37,7 @@ class _ShareCollectionPickerState extends State<ShareCollectionPicker> {
         .from('collections')
         .select()
         .eq('user_id', userId)
+        .isFilter('archived_at', null)
         .order('created_at', ascending: false);
     if (mounted) {
       setState(() {

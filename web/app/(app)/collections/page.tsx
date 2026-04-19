@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CollectionsList from "./collections-list";
-import styles from "./page.module.css";
 
 export default async function CollectionsPage() {
   const supabase = await createClient();
@@ -9,117 +7,129 @@ export default async function CollectionsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: collections } = await supabase
-    .from("collections")
-    .select("*")
-    .eq("user_id", user!.id)
-    .order("sort_order", { ascending: true });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", user!.id)
+    .single();
+  const userEmail = profile?.email ?? user!.email ?? "";
 
-  // Fetch cover image for each collection (first item with an image)
-  const coverMap: Record<string, string> = {};
-  if (collections && collections.length > 0) {
-    const { data: coverItems } = await supabase
-      .from("items")
-      .select("collection_id, image_url, cached_image_path")
-      .in("collection_id", collections.map((c: any) => c.id))
-      .not("image_url", "is", null)
-      .order("sort_order", { ascending: true });
-
-    if (coverItems) {
-      for (const item of coverItems) {
-        // Keep only the first image per collection
-        if (!coverMap[item.collection_id] && (item.cached_image_path || item.image_url)) {
-          coverMap[item.collection_id] = item.cached_image_path || item.image_url;
-        }
-      }
-    }
-  }
-
-  // Fetch item counts per collection
-  const itemCountMap: Record<string, number> = {};
-  if (collections && collections.length > 0) {
-    const { data: allItems } = await supabase
-      .from("items")
+  const [
+    { data: ownedCollections },
+    { data: acceptedShares },
+    { data: pendingShares },
+    { data: sharedByMe },
+    { data: pinnedRows },
+  ] = await Promise.all([
+    supabase
+      .from("collections")
+      .select("*")
+      .eq("user_id", user!.id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("collection_shares")
+      .select(
+        "id, role, collections(*, profiles!collections_user_id_fkey(display_name, email))"
+      )
+      .eq("shared_with_email", userEmail)
+      .eq("status", "accepted"),
+    supabase
+      .from("collection_shares")
+      .select(
+        "id, role, shared_by, created_at, collections(id, name, description, archived_at), profiles!collection_shares_shared_by_fkey(display_name, email)"
+      )
+      .eq("shared_with_email", userEmail)
+      .eq("status", "pending"),
+    supabase
+      .from("collection_shares")
       .select("collection_id")
-      .in("collection_id", collections.map((c: any) => c.id));
+      .eq("shared_by", user!.id),
+    supabase
+      .from("pinned_collections")
+      .select("collection_id")
+      .eq("user_id", user!.id),
+  ]);
 
-    if (allItems) {
-      for (const item of allItems) {
-        itemCountMap[item.collection_id] = (itemCountMap[item.collection_id] ?? 0) + 1;
-      }
+  const sharedByMeCounts: Record<string, number> = {};
+  for (const row of sharedByMe ?? []) {
+    const cid = (row as any).collection_id as string;
+    sharedByMeCounts[cid] = (sharedByMeCounts[cid] ?? 0) + 1;
+  }
+
+  const owned = (ownedCollections ?? []).map((c: any) => ({
+    ...c,
+    _ownership: "mine" as const,
+    _sharedCount: sharedByMeCounts[c.id] ?? 0,
+  }));
+
+  const sharedWithMe = (acceptedShares ?? [])
+    .map((s: any) => {
+      const col = s.collections;
+      if (!col) return null;
+      const owner = col.profiles;
+      return {
+        ...col,
+        _ownership: "shared_with_me" as const,
+        _sharedCount: 0,
+        _shareRole: s.role,
+        _ownerName: owner?.display_name ?? owner?.email ?? "Someone",
+      };
+    })
+    .filter(Boolean);
+
+  const combined = [...owned, ...sharedWithMe];
+  const collectionIds = combined.map((c) => c.id);
+
+  const [{ data: coverItems }, { data: allItems }] = await Promise.all([
+    collectionIds.length
+      ? supabase
+          .from("items")
+          .select("collection_id, image_url, cached_image_path")
+          .in("collection_id", collectionIds)
+          .not("image_url", "is", null)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] as any[] }),
+    collectionIds.length
+      ? supabase
+          .from("items")
+          .select("collection_id")
+          .in("collection_id", collectionIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const coverMap: Record<string, string> = {};
+  for (const item of coverItems ?? []) {
+    if (!coverMap[item.collection_id] && (item.cached_image_path || item.image_url)) {
+      coverMap[item.collection_id] = item.cached_image_path || item.image_url;
     }
   }
 
-  // Fetch shared collections for the dashboard
-  const { data: shares } = await supabase
-    .from("collection_shares")
-    .select("*, collections(*)")
-    .eq("shared_with_user_id", user!.id)
-    .eq("status", "accepted");
-
-  // Fetch pinned collection IDs
-  const { data: pinnedRows } = await supabase
-    .from("pinned_collections")
-    .select("collection_id")
-    .eq("user_id", user!.id);
+  const itemCountMap: Record<string, number> = {};
+  for (const item of allItems ?? []) {
+    itemCountMap[item.collection_id] = (itemCountMap[item.collection_id] ?? 0) + 1;
+  }
 
   const pinnedIds = (pinnedRows ?? []).map((r: any) => r.collection_id as string);
 
-  const sharedItems =
-    shares
-      ?.map((s: any) => ({
-        collection: s.collections,
-        role: s.role,
-        id: s.id,
-      }))
-      .filter((s: any) => s.collection) ?? [];
+  const pendingInvitations = (pendingShares ?? [])
+    .map((s: any) => ({
+      id: s.id,
+      role: s.role,
+      shared_by: s.shared_by,
+      created_at: s.created_at,
+      collection: s.collections,
+      sharer: s.profiles,
+    }))
+    .filter((s: any) => s.collection);
 
   return (
-    <div>
-      <CollectionsList initialCollections={collections ?? []} coverMap={coverMap} pinnedIds={pinnedIds} itemCountMap={itemCountMap} />
-
-      {/* Shared with me section */}
-      <section className={styles.sharedSection}>
-        <div className={styles.sharedHeader}>
-          <h2 className={styles.sharedTitle}>Shared with me</h2>
-          <Link href="/shared" className={styles.viewAllLink}>
-            View All →
-          </Link>
-        </div>
-        {sharedItems.length === 0 ? (
-          <p className={styles.sharedEmpty}>
-            Collections shared with you will appear here.
-          </p>
-        ) : (
-          <div className={styles.sharedList}>
-            {sharedItems.slice(0, 4).map((item: any) => (
-              <Link
-                key={item.id}
-                href={`/collections/${item.collection.id}`}
-                className={styles.sharedRow}
-              >
-                <div className={styles.sharedRowThumb}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                </div>
-                <div className={styles.sharedRowInfo}>
-                  <span className={styles.sharedRowName}>
-                    {item.collection.name}
-                  </span>
-                  <span
-                    className={`${styles.sharedRowRole} ${
-                      item.role === "editor"
-                        ? styles.roleEditor
-                        : styles.roleViewer
-                    }`}
-                  >
-                    {item.role === "editor" ? "Editor" : "Viewer"}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+    <CollectionsList
+      initialCollections={combined}
+      coverMap={coverMap}
+      pinnedIds={pinnedIds}
+      itemCountMap={itemCountMap}
+      pendingInvitations={pendingInvitations}
+      userId={user!.id}
+    />
   );
 }

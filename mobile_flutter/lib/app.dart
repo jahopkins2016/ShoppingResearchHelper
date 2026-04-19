@@ -11,7 +11,6 @@ import 'features/auth/login_screen.dart';
 import 'features/collections/collections_screen.dart';
 import 'features/collections/collection_detail_screen.dart';
 import 'features/collections/widgets/share_collection_picker.dart';
-import 'features/shared/shared_screen.dart';
 import 'features/friends/friends_screen.dart';
 import 'features/messages/messages_screen.dart';
 import 'features/messages/conversation_screen.dart';
@@ -117,6 +116,8 @@ class _SaveItAppState extends State<SaveItApp> {
         final isOnAuth = state.matchedLocation == '/login';
         if (!isLoggedIn && !isOnAuth) return '/login';
         if (isLoggedIn && isOnAuth) return '/collections';
+        // Legacy /shared deep link — redirect to merged collections view.
+        if (state.matchedLocation == '/shared') return '/collections';
         return null;
       },
       routes: [
@@ -138,12 +139,6 @@ class _SaveItAppState extends State<SaveItApp> {
                         CollectionDetailScreen(id: state.pathParameters['id']!),
                   ),
                 ],
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: '/shared',
-                builder: (_, __) => const SharedScreen(),
               ),
             ]),
             StatefulShellBranch(routes: [

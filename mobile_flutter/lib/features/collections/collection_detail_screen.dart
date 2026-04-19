@@ -196,6 +196,20 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _toggleArchive() async {
+    if (_collection == null) return;
+    final isArchived = _collection!['archived_at'] != null;
+    await _supabase
+        .from('collections')
+        .update({'archived_at': isArchived ? null : DateTime.now().toIso8601String()})
+        .eq('id', widget.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(isArchived ? 'Collection unarchived' : 'Collection archived'),
+    ));
+    Navigator.of(context).pop();
+  }
+
   void _showAddItem() {
     showModalBottomSheet(
       context: context,
@@ -368,16 +382,24 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
             onSelected: (v) {
               if (v == 'share') _showShareCollection();
               if (v == 'edit') _showEditCollection();
+              if (v == 'archive') _toggleArchive();
               if (v == 'delete') _deleteCollection();
             },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'share', child: Text('Share')),
-              const PopupMenuItem(value: 'edit', child: Text('Edit')),
-              const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Delete',
-                      style: TextStyle(color: AppTheme.danger))),
-            ],
+            itemBuilder: (_) {
+              final isArchived = _collection?['archived_at'] != null;
+              return [
+                const PopupMenuItem(value: 'share', child: Text('Share')),
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(
+                  value: 'archive',
+                  child: Text(isArchived ? 'Unarchive' : 'Archive'),
+                ),
+                const PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Delete',
+                        style: TextStyle(color: AppTheme.danger))),
+              ];
+            },
           ),
         ],
       ),

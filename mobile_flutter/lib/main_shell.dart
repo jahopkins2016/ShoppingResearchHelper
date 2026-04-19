@@ -11,7 +11,6 @@ class MainShell extends StatelessWidget {
 
   static const _tabs = [
     _TabInfo(icon: Icons.grid_view_rounded, label: 'Collections'),
-    _TabInfo(icon: Icons.folder_shared_outlined, label: 'Shared'),
     _TabInfo(icon: Icons.people_outline, label: 'Friends'),
     _TabInfo(icon: Icons.chat_bubble_outline, label: 'Messages'),
     _TabInfo(icon: Icons.settings_outlined, label: 'Settings'),
@@ -40,24 +39,24 @@ class MainShell extends StatelessWidget {
   }
 
   Widget? _fabForTab(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        return FloatingActionButton(
-          heroTag: 'collections_fab',
-          onPressed: () => _showNewCollectionDialog(context),
-          backgroundColor: AppTheme.primary,
-          child: const Icon(Icons.add, color: Colors.white),
-        );
-      case 3:
-        return FloatingActionButton(
-          heroTag: 'messages_fab',
-          onPressed: () => context.push('/messages/new'),
-          backgroundColor: AppTheme.primary,
-          child: const Icon(Icons.edit_outlined, color: Colors.white),
-        );
-      default:
-        return null;
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location == '/collections') {
+      return FloatingActionButton(
+        heroTag: 'collections_fab',
+        onPressed: () => _showNewCollectionDialog(context),
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      );
     }
+    if (location == '/messages') {
+      return FloatingActionButton(
+        heroTag: 'messages_fab',
+        onPressed: () => context.push('/messages/new'),
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.edit_outlined, color: Colors.white),
+      );
+    }
+    return null;
   }
 
   void _showNewCollectionDialog(BuildContext context) {

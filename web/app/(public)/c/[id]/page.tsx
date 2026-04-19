@@ -17,6 +17,7 @@ export default async function PublicCollectionDetailPage({
     .select("*, profiles(display_name)")
     .eq("id", id)
     .eq("is_public", true)
+    .is("archived_at", null)
     .single();
 
   if (!collection) {

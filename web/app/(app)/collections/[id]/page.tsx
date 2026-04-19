@@ -60,7 +60,12 @@ export default async function CollectionDetailPage({
         )}
       </div>
 
-      <CollectionItems initialItems={items ?? []} collectionId={id} />
+      <CollectionItems
+        initialItems={items ?? []}
+        collectionId={id}
+        initialArchivedAt={collection.archived_at ?? null}
+        initialIsPublic={collection.is_public ?? false}
+      />
     </div>
   );
 }

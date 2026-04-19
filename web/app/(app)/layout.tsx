@@ -54,16 +54,16 @@ export default async function AppLayout({
     unreadMessageCount = count ?? 0;
   }
 
-  // Fetch pinned collections for sidebar
+  // Fetch pinned collections for sidebar (exclude archived)
   const { data: pinnedRows } = await supabase
     .from("pinned_collections")
-    .select("collection_id, sort_order, collections(id, name)")
+    .select("collection_id, sort_order, collections(id, name, archived_at)")
     .eq("user_id", user.id)
     .order("sort_order", { ascending: true });
 
   // Fetch item counts for pinned collections
   const pinnedIds = (pinnedRows ?? [])
-    .filter((r: any) => r.collections)
+    .filter((r: any) => r.collections && !r.collections.archived_at)
     .map((r: any) => r.collections.id as string);
 
   let itemCountMap: Record<string, number> = {};
@@ -81,7 +81,7 @@ export default async function AppLayout({
   }
 
   const pinnedCollections = (pinnedRows ?? [])
-    .filter((r: any) => r.collections)
+    .filter((r: any) => r.collections && !r.collections.archived_at)
     .map((r: any) => ({
       id: r.collections.id as string,
       name: r.collections.name as string,

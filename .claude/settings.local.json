@@ -212,7 +212,22 @@
       "Bash(ls supabase/.temp)",
       "Bash(ls supabase/config.toml)",
       "Bash(curl -s -o /tmp/resp.txt -w \"HTTP: %{http_code}\\\\n\" -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H \"Content-Type: application/json\" -d '{\"item_id\":\"test\"}')",
-      "Bash(curl -s -o /tmp/resp.txt -w 'HTTP: %{http_code}\\\\n' -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -d '{\"item_id\":\"test\"}')"
+      "Bash(curl -s -o /tmp/resp.txt -w 'HTTP: %{http_code}\\\\n' -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -d '{\"item_id\":\"test\"}')",
+      "Bash(curl -sL -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://www.lesorbelle.it/la-tenuta/\")",
+      "Bash(curl -sS -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'Content-Type: application/json' -d '{\"item_id\":\"d8000683-6ba7-4a57-a7e6-c74bdf38b35d\"}')",
+      "Bash(curl -sS -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'Content-Type: application/json' -d '{\"item_id\":\"2eb76b92-55c5-4aef-adb5-138787777d29\"}')",
+      "mcp__9c7b03ad-fbe8-412a-9d7b-08943c8fee6f__apply_migration",
+      "Bash(curl -sS -X POST https://fvzcsnphxrewvpvuqamt.supabase.co/functions/v1/enrich-item -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2emNzbnBoeHJld3ZwdnVxYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NzQ4NDIsImV4cCI6MjA5MDI1MDg0Mn0.LzVpSrNIuzmwgsyzmuLOE4V-WX2GyKwJqxG1DCjheEs' -H 'Content-Type: application/json' -d '{\"item_id\":\"__TRACKED_VAR__\"}')",
+      "Bash(~/flutter/bin/flutter --version)",
+      "Bash(~/flutter/bin/flutter pub *)",
+      "Bash(~/flutter/bin/flutter analyze *)",
+      "Bash(npx tsc *)",
+      "Bash(supabase db *)",
+      "Bash(supabase migration *)",
+      "Bash(supabase secrets *)",
+      "Bash(/c/src/flutter/bin/flutter analyze *)",
+      "Bash(/c/Users/JasonHopkins/flutter/bin/flutter analyze *)",
+      "Bash(/c/Users/JasonHopkins/flutter/bin/flutter devices *)"
     ]
   }
 }

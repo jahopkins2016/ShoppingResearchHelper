@@ -18,8 +18,8 @@ export default async function JoinPage({
     } = await supabase.auth.getUser();
 
     if (user) {
-      // Logged in — redirect to shared page where they can accept
-      redirect("/shared");
+      // Logged in — redirect to collections where pending invitations appear.
+      redirect("/collections");
     }
 
     // Not logged in — cookie is set by middleware; fetch share details for display
