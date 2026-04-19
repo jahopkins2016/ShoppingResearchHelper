@@ -534,7 +534,7 @@ class _ItemCard extends StatelessWidget {
     }
     // Favicon fallback so items never show a blank placeholder
     if (imageUri == null) {
-      final sourceUrl = item['source_url'] as String?;
+      final sourceUrl = item['url'] as String?;
       if (sourceUrl != null) {
         final uri = Uri.tryParse(sourceUrl);
         if (uri != null && uri.host.isNotEmpty) {

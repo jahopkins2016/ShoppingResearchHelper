@@ -211,7 +211,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
       // Fetch items with images first, then fill gaps with favicon fallbacks.
       final thumbs = await _supabase
           .from('items')
-          .select('collection_id, image_url, source_url')
+          .select('collection_id, image_url, url')
           .inFilter('collection_id', collectionIds)
           .limit(8 * collectionIds.length);
 
@@ -226,7 +226,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
           thumbMap[cid]!.add(url);
         } else {
           // Favicon fallback for items without a product image
-          final sourceUrl = t['source_url'] as String?;
+          final sourceUrl = t['url'] as String?;
           if (sourceUrl != null) {
             final uri = Uri.tryParse(sourceUrl);
             if (uri != null && uri.host.isNotEmpty) {

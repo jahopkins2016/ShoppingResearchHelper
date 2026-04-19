@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -23,8 +24,19 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _passwordVisible = false;
   bool _loading = false;
   String? _error;
+  String? _version;
 
   final _supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() => _version = 'v${info.version}+${info.buildNumber}');
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -347,10 +359,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Center(
+              Center(
                 child: Text(
-                  'v1.3.10-ci',
-                  style: TextStyle(
+                  _version ?? '',
+                  style: const TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
                   ),
