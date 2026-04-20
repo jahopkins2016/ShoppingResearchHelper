@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../shared/widgets/pending_invitations.dart';
 import 'widgets/collection_card.dart';
 import 'widgets/new_collection_sheet.dart';
+import 'widgets/share_collection_sheet.dart';
 
 class CollectionsScreen extends StatefulWidget {
   const CollectionsScreen({super.key});
@@ -254,6 +255,18 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
     _load();
   }
 
+  void _showShareSheet(Map<String, dynamic> collection) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ShareCollectionSheet(
+        collection: collection,
+        onChanged: _load,
+      ),
+    );
+  }
+
   void _showNewCollection() {
     showModalBottomSheet(
       context: context,
@@ -361,6 +374,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                       .push('/collections/${_collections[i]['id']}');
                   if (mounted) _load();
                 },
+                onShare: () => _showShareSheet(_collections[i]),
               ),
               childCount: _collections.length,
             ),

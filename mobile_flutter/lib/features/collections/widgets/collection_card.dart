@@ -5,9 +5,14 @@ import '../../../core/theme/app_theme.dart';
 class CollectionCard extends StatelessWidget {
   final Map<String, dynamic> collection;
   final VoidCallback onTap;
+  final VoidCallback? onShare;
 
-  const CollectionCard(
-      {super.key, required this.collection, required this.onTap});
+  const CollectionCard({
+    super.key,
+    required this.collection,
+    required this.onTap,
+    this.onShare,
+  });
 
   List<String> _getImageUrls() {
     final thumbnails = collection['_thumbnails'] as List? ?? [];
@@ -101,13 +106,29 @@ class CollectionCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text('$itemCount item${itemCount == 1 ? '' : 's'}',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  if (isPublic) ...[
-                    const SizedBox(width: 6),
-                    const Icon(Icons.public,
-                        size: 12, color: AppTheme.textSecondary),
-                  ],
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text('$itemCount item${itemCount == 1 ? '' : 's'}',
+                            style: Theme.of(context).textTheme.bodySmall),
+                        if (isPublic) ...[
+                          const SizedBox(width: 6),
+                          Icon(Icons.public,
+                              size: 12, color: AppTheme.textMuted(context)),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (onShare != null && ownership == 'mine')
+                    InkWell(
+                      onTap: onShare,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(Icons.ios_share,
+                            size: 18, color: AppTheme.primary),
+                      ),
+                    ),
                 ],
               ),
               if (ownership == 'shared_with_me' && ownerName != null) ...[

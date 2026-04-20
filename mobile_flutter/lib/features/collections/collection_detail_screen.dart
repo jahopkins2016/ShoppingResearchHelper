@@ -30,6 +30,14 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
   Map<String, dynamic>? _collection;
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
+  bool _showArchivedItems = false;
+
+  List<Map<String, dynamic>> get _visibleItems => _showArchivedItems
+      ? _items.where((i) => i['archived_at'] != null).toList()
+      : _items.where((i) => i['archived_at'] == null).toList();
+
+  int get _archivedCount =>
+      _items.where((i) => i['archived_at'] != null).length;
 
   @override
   void initState() {
@@ -149,6 +157,28 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
               i['id'] == itemId ? {...i, 'price_drop_seen': true} : i)
           .toList();
     });
+  }
+
+  Future<void> _archiveItem(Map<String, dynamic> item) async {
+    final id = item['id'] as String;
+    final isArchived = item['archived_at'] != null;
+    final newValue = isArchived ? null : DateTime.now().toIso8601String();
+    await _supabase
+        .from('items')
+        .update({'archived_at': newValue}).eq('id', id);
+    setState(() {
+      _items = _items
+          .map((i) => i['id'] == id ? {...i, 'archived_at': newValue} : i)
+          .toList();
+    });
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(isArchived ? 'Item unarchived' : 'Item archived'),
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () => _archiveItem({...item, 'archived_at': newValue}),
+      ),
+    ));
   }
 
   Future<void> _deleteItem(String itemId) async {
@@ -384,6 +414,9 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
               if (v == 'edit') _showEditCollection();
               if (v == 'archive') _toggleArchive();
               if (v == 'delete') _deleteCollection();
+              if (v == 'toggle_archived_items') {
+                setState(() => _showArchivedItems = !_showArchivedItems);
+              }
             },
             itemBuilder: (_) {
               final isArchived = _collection?['archived_at'] != null;
@@ -394,6 +427,13 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
                   value: 'archive',
                   child: Text(isArchived ? 'Unarchive' : 'Archive'),
                 ),
+                if (_archivedCount > 0)
+                  PopupMenuItem(
+                    value: 'toggle_archived_items',
+                    child: Text(_showArchivedItems
+                        ? 'Hide archived items'
+                        : 'Show archived items ($_archivedCount)'),
+                  ),
                 const PopupMenuItem(
                     value: 'delete',
                     child: Text('Delete',
@@ -406,24 +446,28 @@ class _CollectionDetailScreenState extends State<CollectionDetailScreen> {
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primary))
-          : _items.isEmpty
+          : _visibleItems.isEmpty
               ? _emptyBody()
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                    itemCount: _items.length,
-                    itemBuilder: (_, i) => _ItemCard(
-                      item: _items[i],
-                      onTap: () => _openItem(_items[i]),
-                      onLongPress: () => _showInspect(_items[i]),
-                      onPriceHistory: () => _showPriceHistory(_items[i]),
-                      onSimilar: () => _showSimilar(_items[i]),
-                      onNearby: () => _showNearby(_items[i]),
-                      onEditNotes: () => _showEditNotes(_items[i]),
-                      onInspect: () => _showInspect(_items[i]),
-                      onDelete: () => _deleteItem(_items[i]['id']),
-                    ),
+                    itemCount: _visibleItems.length,
+                    itemBuilder: (_, i) {
+                      final item = _visibleItems[i];
+                      return _ItemCard(
+                        item: item,
+                        onTap: () => _openItem(item),
+                        onLongPress: () => _showInspect(item),
+                        onPriceHistory: () => _showPriceHistory(item),
+                        onSimilar: () => _showSimilar(item),
+                        onNearby: () => _showNearby(item),
+                        onEditNotes: () => _showEditNotes(item),
+                        onInspect: () => _showInspect(item),
+                        onArchive: () => _archiveItem(item),
+                        onDelete: () => _deleteItem(item['id']),
+                      );
+                    },
                   ),
                 ),
     );
@@ -507,6 +551,7 @@ class _ItemCard extends StatelessWidget {
   final VoidCallback onNearby;
   final VoidCallback onEditNotes;
   final VoidCallback onInspect;
+  final VoidCallback onArchive;
   final VoidCallback onDelete;
 
   const _ItemCard({
@@ -518,6 +563,7 @@ class _ItemCard extends StatelessWidget {
     required this.onNearby,
     required this.onEditNotes,
     required this.onInspect,
+    required this.onArchive,
     required this.onDelete,
   });
 
@@ -770,13 +816,29 @@ class _ItemCard extends StatelessWidget {
                         onTap: onInspect,
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            size: 18, color: AppTheme.danger),
-                        onPressed: onDelete,
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert,
+                            size: 18, color: AppTheme.textMuted(context)),
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        splashRadius: 20,
+                        onSelected: (v) {
+                          if (v == 'archive') onArchive();
+                          if (v == 'delete') onDelete();
+                        },
+                        itemBuilder: (_) {
+                          final isArchived = item['archived_at'] != null;
+                          return [
+                            PopupMenuItem(
+                              value: 'archive',
+                              child: Text(
+                                  isArchived ? 'Unarchive' : 'Archive'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete',
+                                  style: TextStyle(color: AppTheme.danger)),
+                            ),
+                          ];
+                        },
                       ),
                     ],
                   ),

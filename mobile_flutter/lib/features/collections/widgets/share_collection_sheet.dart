@@ -81,29 +81,46 @@ class _ShareCollectionSheetState extends State<ShareCollectionSheet> {
   Future<void> _shareInviteLink() async {
     var url = _inviteUrl;
     if (url == null) {
-      // Collection row didn't include invite_token — fetch/generate one and
-      // reflect it on the widget's collection map for subsequent shares.
-      final row = await _supabase
-          .from('collections')
-          .select('invite_token')
-          .eq('id', widget.collection['id'])
-          .single();
-      final token = row['invite_token'] as String?;
-      if (token == null || token.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not generate invite link')),
-        );
-        return;
+      // Try to fetch the invite_token. RLS may block this for non-owners,
+      // so fall back to the public /c/{id} URL if the lookup fails.
+      try {
+        final row = await _supabase
+            .from('collections')
+            .select('invite_token')
+            .eq('id', widget.collection['id'])
+            .single();
+        final token = row['invite_token'] as String?;
+        if (token != null && token.isNotEmpty) {
+          widget.collection['invite_token'] = token;
+          url = '$_siteUrl/join?invite=$token';
+        }
+      } catch (e) {
+        debugPrint('invite_token fetch failed: $e');
       }
-      widget.collection['invite_token'] = token;
-      url = '$_siteUrl/join?invite=$token';
     }
+    // Always have something to share — fall back to the collection URL.
+    url ??= _publicUrl;
+
     final name = widget.collection['name'] as String? ?? 'Collection';
-    await Share.share(
-      'Check out my SaveIt collection "$name": $url',
-      subject: name,
-    );
+    final message = 'Check out my SaveIt collection "$name": $url';
+
+    try {
+      final box = context.findRenderObject() as RenderBox?;
+      await Share.share(
+        message,
+        subject: name,
+        sharePositionOrigin:
+            box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+      );
+    } catch (e) {
+      debugPrint('Share.share failed: $e');
+      // Fall back to clipboard so the user always gets the link.
+      await Clipboard.setData(ClipboardData(text: url));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Link copied to clipboard')),
+      );
+    }
   }
 
   Future<void> _invite() async {
