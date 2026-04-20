@@ -50,7 +50,7 @@ function showStatus(message: string, type: 'success' | 'error') {
 }
 
 function openWebsite() {
-  chrome.tabs.create({ url: 'https://web-weld-two-36.vercel.app/' });
+  chrome.tabs.create({ url: 'https://saveit.website/' });
 }
 
 // ── Metadata extraction (runs in page context) ──────────────

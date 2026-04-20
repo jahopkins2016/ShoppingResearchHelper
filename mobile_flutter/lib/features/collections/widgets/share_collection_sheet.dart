@@ -4,10 +4,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/share_helpers.dart';
 
-// Kept in sync with the web app's production URL (see send-invite-email edge
-// function's SITE_URL default).
-const _siteUrl = 'https://web-weld-two-36.vercel.app';
+// Single source of truth for the web app's canonical domain; keep using
+// kReferralBaseUrl so app-link-claimed paths (/join, /c/) stay consistent.
+const _siteUrl = kReferralBaseUrl;
 
 class ShareCollectionSheet extends StatefulWidget {
   final Map<String, dynamic> collection;

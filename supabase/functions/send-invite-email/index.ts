@@ -5,7 +5,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-const SITE_URL = Deno.env.get("SITE_URL") || "https://web-weld-two-36.vercel.app";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://saveit.website";
 
 async function sendEmail(to: string, subject: string, html: string) {
   const client = new SMTPClient({
