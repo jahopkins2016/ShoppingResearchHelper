@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/providers/auth_provider.dart';
 import 'core/providers/theme_provider.dart';
@@ -40,6 +41,9 @@ class _SaveItAppState extends State<SaveItApp> {
   StreamSubscription<Uri>? _appLinkSub;
   final AppLinks _appLinks = AppLinks();
   AuthProvider? _authProvider;
+  // Invite token captured from a cold-start deep link while the user
+  // was unauthenticated. Applied once auth completes.
+  String? _pendingInviteToken;
 
   @override
   void initState() {
@@ -67,11 +71,52 @@ class _SaveItAppState extends State<SaveItApp> {
     debugPrint('Incoming deep link: $uri');
     // Only handle our own domain for now.
     if (uri.host != 'saveit.website') return;
-    // /join?ref=CODE — a referral link. The router's redirect logic will
-    // route unauthed users to /login and authed users to /collections,
-    // which is the desired behaviour for now. If we later want to apply
-    // the ref= code at signup, capture uri.queryParameters['ref'] here
-    // and stash it for the signup flow to read.
+
+    // /join?invite=<token> — collection share invite.
+    if (uri.path.startsWith('/join')) {
+      final invite = uri.queryParameters['invite'];
+      if (invite != null && invite.isNotEmpty) {
+        _handleInviteToken(invite);
+        return;
+      }
+      // /join?ref=<code> — referral. The router already routes the
+      // user to /login or /collections based on auth state, nothing
+      // more to do here at the moment.
+    }
+  }
+
+  /// Accepts a collection-share invite token via the
+  /// accept_collection_invite RPC. If the user isn't signed in yet,
+  /// we stash the token; _onAuthChanged retries once auth completes.
+  Future<void> _handleInviteToken(String token) async {
+    final auth = _authProvider ?? context.read<AuthProvider>();
+    if (!auth.isAuthenticated) {
+      _pendingInviteToken = token;
+      return;
+    }
+    try {
+      final result = await Supabase.instance.client
+          .rpc('accept_collection_invite', params: {'p_token': token});
+      final collectionId = result as String?;
+      final navContext = _rootNavigatorKey.currentContext;
+      if (collectionId != null && navContext != null) {
+        GoRouter.of(navContext).go('/collections/$collectionId');
+        ScaffoldMessenger.of(navContext).showSnackBar(
+          const SnackBar(
+            content: Text('Invite accepted — you can now see this collection.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('accept_collection_invite failed: $e\n$st');
+      final navContext = _rootNavigatorKey.currentContext;
+      if (navContext != null) {
+        ScaffoldMessenger.of(navContext).showSnackBar(
+          SnackBar(content: Text('Could not accept invite: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -100,6 +145,13 @@ class _SaveItAppState extends State<SaveItApp> {
     if (_authProvider?.isAuthenticated ?? false) {
       // Auth just came online — retry any URL we buffered while unauthenticated.
       WidgetsBinding.instance.addPostFrameCallback((_) => _tryShowPending());
+      // And apply any invite token that arrived via deep link pre-auth.
+      final token = _pendingInviteToken;
+      if (token != null) {
+        _pendingInviteToken = null;
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _handleInviteToken(token));
+      }
     }
   }
 

@@ -38,8 +38,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     try {
       final data = await _supabase
           .from('friends')
-          .select('*, profiles!friends_friend_user_id_fkey(id, display_name, avatar_url, email)')
-          .eq('user_id', userId);
+          .select('*, profiles!friends_friend_id_fkey(id, display_name, avatar_url, email)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
       if (!mounted) return;
       setState(() {
         _friends = List<Map<String, dynamic>>.from(data);
@@ -101,8 +102,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
       for (final friendId in uniqueIds) {
         await _supabase.from('friends').upsert(
-          {'user_id': userId, 'friend_user_id': friendId},
-          onConflict: 'user_id,friend_user_id',
+          {'user_id': userId, 'friend_id': friendId, 'source': 'share'},
+          onConflict: 'user_id,friend_id',
           ignoreDuplicates: true,
         );
       }
@@ -120,7 +121,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         .from('friends')
         .delete()
         .eq('user_id', userId!)
-        .eq('friend_user_id', friendUserId);
+        .eq('friend_id', friendUserId);
     _load();
   }
 
@@ -215,18 +216,55 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 4),
                           itemBuilder: (_, i) {
-                            final profile = _friends[i]['profiles']
+                            final row = _friends[i];
+                            final profile = row['profiles']
                                 as Map<String, dynamic>?;
                             final name = profile?['display_name'] ??
                                 profile?['email'] ??
                                 'Unknown';
+                            // "Just joined" badge for friendships younger
+                            // than 48h — makes new invite-acceptances
+                            // easy to spot at the top of the list.
+                            final createdAt =
+                                DateTime.tryParse(row['created_at'] as String? ?? '')
+                                    ?.toLocal();
+                            final isNew = createdAt != null &&
+                                DateTime.now().difference(createdAt) <
+                                    const Duration(hours: 48);
                             return ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 0, vertical: 4),
                               leading: _Avatar(name: name),
-                              title: Text(name,
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
+                              title: Row(children: [
+                                Flexible(
+                                  child: Text(name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall),
+                                ),
+                                if (isNew) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius:
+                                          BorderRadius.circular(999),
+                                    ),
+                                    child: const Text(
+                                      'Just joined',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ]),
                               subtitle:
                                   Text(profile?['email'] ?? ''),
                               trailing: IconButton(
