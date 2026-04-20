@@ -7,11 +7,12 @@ const String kReferralBaseUrl = 'https://web-weld-two-36.vercel.app';
 
 /// Shares a referral invitation via the native share sheet.
 ///
-/// - Uses the current `share_plus` (v10+) API, which takes a [ShareParams].
-/// - Awaits the platform call so any error surfaces instead of being swallowed.
-/// - Passes a [ShareParams.sharePositionOrigin] derived from [context]'s
-///   RenderBox — required on iPad, ignored elsewhere. Without it the sheet
-///   can silently fail to present on iPadOS.
+/// - Awaits the platform call so any error surfaces instead of being
+///   swallowed (the previous fire-and-forget call was why the button
+///   appeared dead on TestFlight).
+/// - Passes [sharePositionOrigin] derived from [context]'s RenderBox —
+///   required on iPad, ignored elsewhere. Without it the sheet can
+///   silently fail to present on iPadOS.
 /// - On error, logs and shows a SnackBar so the user sees that something
 ///   went wrong instead of an unresponsive button.
 Future<void> shareReferralLink(
@@ -33,12 +34,10 @@ Future<void> shareReferralLink(
   }
 
   try {
-    await SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        subject: 'Join me on SaveIt',
-        sharePositionOrigin: origin,
-      ),
+    await Share.share(
+      text,
+      subject: 'Join me on SaveIt',
+      sharePositionOrigin: origin,
     );
   } catch (e, st) {
     debugPrint('shareReferralLink failed: $e\n$st');
