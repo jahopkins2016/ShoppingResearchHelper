@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Base URL for the SaveIt web app. Used as the referral landing page.
-/// TODO: swap for production domain once universal-links are set up.
-const String kReferralBaseUrl = 'https://web-weld-two-36.vercel.app';
+/// Shared links at this domain are claimed by the app via universal
+/// links (iOS) / app links (Android), so tapping them on a device with
+/// SaveIt installed opens the app instead of the browser.
+const String kReferralBaseUrl = 'https://saveit.website';
 
 /// Shares a referral invitation via the native share sheet.
 ///

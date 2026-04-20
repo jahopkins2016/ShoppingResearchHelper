@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.saveit.saveit",
+      "sha256_cert_fingerprints": [
+        "E8:62:EA:3B:C9:E9:B5:5D:BD:6E:DB:1A:93:29:A4:E3:91:74:56:AA:DD:B6:E1:30:76:50:93:95:A0:0E:4E:9B",
+        "REPLACE_WITH_RELEASE_SHA256_FINGERPRINT"
+      ]
+    }
+  }
+]

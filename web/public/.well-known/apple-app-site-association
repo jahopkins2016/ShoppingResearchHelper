@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.jahopkins.saveit"],
+        "components": [
+          {
+            "/": "/join*",
+            "comment": "Referral and collection invite links"
+          }
+        ]
+      }
+    ]
+  }
+}

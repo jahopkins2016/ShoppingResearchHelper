@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -36,12 +37,41 @@ class SaveItApp extends StatefulWidget {
 
 class _SaveItAppState extends State<SaveItApp> {
   StreamSubscription? _shareSub;
+  StreamSubscription<Uri>? _appLinkSub;
+  final AppLinks _appLinks = AppLinks();
   AuthProvider? _authProvider;
 
   @override
   void initState() {
     super.initState();
     _shareSub = ShareIntentService().sharedUrls.listen(_onSharedUrl);
+    _initAppLinks();
+  }
+
+  Future<void> _initAppLinks() async {
+    // Handle cold-start: app launched by tapping a universal/app link.
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) _onIncomingUri(initialUri);
+    } catch (e) {
+      debugPrint('app_links getInitialLink failed: $e');
+    }
+    // Handle warm-start: app already running when a link is tapped.
+    _appLinkSub = _appLinks.uriLinkStream.listen(
+      _onIncomingUri,
+      onError: (Object e) => debugPrint('app_links stream error: $e'),
+    );
+  }
+
+  void _onIncomingUri(Uri uri) {
+    debugPrint('Incoming deep link: $uri');
+    // Only handle our own domain for now.
+    if (uri.host != 'saveit.website') return;
+    // /join?ref=CODE — a referral link. The router's redirect logic will
+    // route unauthed users to /login and authed users to /collections,
+    // which is the desired behaviour for now. If we later want to apply
+    // the ref= code at signup, capture uri.queryParameters['ref'] here
+    // and stash it for the signup flow to read.
   }
 
   @override
@@ -62,6 +92,7 @@ class _SaveItAppState extends State<SaveItApp> {
   void dispose() {
     _authProvider?.removeListener(_onAuthChanged);
     _shareSub?.cancel();
+    _appLinkSub?.cancel();
     super.dispose();
   }
 
