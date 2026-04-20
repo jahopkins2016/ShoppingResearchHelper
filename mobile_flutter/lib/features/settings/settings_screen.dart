@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart' show Share;
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/share_helpers.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -49,14 +49,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await _supabase.auth.signOut();
   }
 
-  void _shareReferral() {
+  Future<void> _shareReferral() async {
     final code = _profile?['referral_code'] as String?;
-    const siteUrl = 'https://web-weld-two-36.vercel.app';
-    final url = code != null ? '$siteUrl/join?ref=$code' : siteUrl;
-    Share.share(
-      'Join me on SaveIt — the smart product bookmarking app! $url',
-      subject: 'Join me on SaveIt',
-    );
+    await shareReferralLink(context, referralCode: code);
   }
 
   @override

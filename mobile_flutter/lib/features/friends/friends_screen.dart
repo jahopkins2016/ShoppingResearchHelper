@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/share_helpers.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -124,15 +124,24 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _load();
   }
 
-  void _inviteFriend() {
-    const siteUrl = 'https://web-weld-two-36.vercel.app';
-    final profile = _supabase.auth.currentUser;
-    final code = profile?.userMetadata?['referral_code'] as String?;
-    final url = code != null ? '$siteUrl/join?ref=$code' : siteUrl;
-    Share.share(
-      'Join me on SaveIt — the smart product bookmarking app! $url',
-      subject: 'Join me on SaveIt',
-    );
+  Future<void> _inviteFriend() async {
+    // Referral code lives on the profiles row, not auth user metadata.
+    String? code;
+    final userId = context.read<AuthProvider>().userId;
+    if (userId != null) {
+      try {
+        final row = await _supabase
+            .from('profiles')
+            .select('referral_code')
+            .eq('id', userId)
+            .single();
+        code = row['referral_code'] as String?;
+      } catch (e) {
+        debugPrint('Failed to load referral_code: $e');
+      }
+    }
+    if (!mounted) return;
+    await shareReferralLink(context, referralCode: code);
   }
 
   @override
