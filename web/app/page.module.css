@@ -1,0 +1,110 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+}
+
+.topBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, #4F7EFF, #6B93FF, #7BA3FF);
+  z-index: 50;
+}
+
+.main {
+  flex: 1;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 64px 0 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.logoIcon {
+  width: 88px;
+  height: auto;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 12px 32px rgba(79, 126, 255, 0.25));
+}
+
+.heading {
+  font-family: var(--font-headline, Manrope);
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--color-text, #191b23);
+  letter-spacing: -0.025em;
+  margin: 0 0 12px;
+}
+
+.tagline {
+  font-family: var(--font-body, Manrope);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #434655);
+  max-width: 420px;
+  margin: 0 0 36px;
+}
+
+.primaryCta {
+  display: inline-block;
+  background: linear-gradient(to right, #4F7EFF, #6B93FF);
+  color: #ffffff;
+  font-family: var(--font-headline, Manrope);
+  font-size: 17px;
+  font-weight: 700;
+  padding: 14px 32px;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(79, 126, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primaryCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(79, 126, 255, 0.45);
+}
+
+.signInNote {
+  font-size: 14px;
+  color: var(--color-text-muted, #737686);
+  margin: 24px 0 0;
+}
+
+.signInLink {
+  color: var(--color-primary, #4F7EFF);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signInLink:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 0 48px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-muted, #737686);
+}
+
+.footer a {
+  color: var(--color-text-muted, #737686);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--color-primary, #4F7EFF);
+}

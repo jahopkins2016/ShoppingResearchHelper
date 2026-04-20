@@ -1,5 +1,5 @@
 // Marketing version. Bump manually for meaningful releases.
-export const APP_VERSION = "1.11.0";
+export const APP_VERSION = "1.12.0";
 
 // Short commit SHA of the currently-deployed build. On Vercel this is
 // automatically set from VERCEL_GIT_COMMIT_SHA at build time; locally

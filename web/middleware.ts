@@ -30,13 +30,19 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to /login (except public routes)
+  // Redirect unauthenticated users to /login (except public routes).
+  // Public routes include the marketing landing (/), the legal pages
+  // (/privacy, /terms) which Google's OAuth verifier must be able to
+  // reach, plus the invite/share flows and auth callback.
   if (
     !user &&
+    request.nextUrl.pathname !== "/" &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth/callback") &&
     !request.nextUrl.pathname.startsWith("/join") &&
-    !request.nextUrl.pathname.startsWith("/c/")
+    !request.nextUrl.pathname.startsWith("/c/") &&
+    !request.nextUrl.pathname.startsWith("/privacy") &&
+    !request.nextUrl.pathname.startsWith("/terms")
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
