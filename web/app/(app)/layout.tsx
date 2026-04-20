@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import styles from "./layout.module.css";
 import SidebarNav from "./sidebar-nav";
 import AvatarMenu from "./avatar-menu";
-import { APP_VERSION } from "@/lib/version";
+import { APP_VERSION_LABEL } from "@/lib/version";
 
 export default async function AppLayout({
   children,
@@ -135,7 +135,7 @@ export default async function AppLayout({
             <Link href="/collections" className={styles.addBookmarkBtn}>
               + Add New Bookmark
             </Link>
-            <div className={styles.versionTag}>v{APP_VERSION}</div>
+            <div className={styles.versionTag}>{APP_VERSION_LABEL}</div>
           </div>
         </aside>
 
