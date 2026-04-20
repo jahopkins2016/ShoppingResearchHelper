@@ -90,6 +90,15 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Skip middleware for:
+    //   - Next.js internals (_next/static, _next/image)
+    //   - favicon
+    //   - /.well-known/* — apple-app-site-association (universal links)
+    //     and assetlinks.json (Android app links) must be fetched by
+    //     Apple/Google without being redirected to /login.
+    //   - google<hex>.html — Google Search Console domain-verification
+    //     files served from /public at the domain root.
+    //   - static image extensions.
+    "/((?!_next/static|_next/image|favicon.ico|\\.well-known|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
