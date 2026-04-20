@@ -109,6 +109,22 @@ class _SaveItAppState extends State<SaveItApp> {
   }
 
   void _onSharedUrl(String url) {
+    // Our own share links (e.g. https://saveit.website/join?ref=XXX)
+    // arrive here on Android because the intent-filter's ACTION_VIEW
+    // gets picked up by receive_sharing_intent in addition to app_links.
+    // Don't offer to bookmark them as product items — they're referral
+    // / invite links. Route them through the deep-link handler instead.
+    try {
+      final uri = Uri.parse(url);
+      if (uri.host == 'saveit.website') {
+        ShareIntentService().clearPending();
+        _onIncomingUri(uri);
+        return;
+      }
+    } catch (_) {
+      // Fall through to the normal share flow on parse failure.
+    }
+
     // If we're not authenticated yet, leave the URL buffered; _onAuthChanged
     // will retry once the user signs in.
     final authProvider = _authProvider ?? context.read<AuthProvider>();
