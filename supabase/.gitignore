@@ -1,0 +1,3 @@
+# Local Supabase CLI state — not safe to share across machines.
+.temp/
+.branches/

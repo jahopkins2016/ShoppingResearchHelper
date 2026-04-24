@@ -13,9 +13,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
+// Service-role client for writing back to items (bypasses RLS).
 const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+// Daily per-user cap on vision enrichments. Sized so a single user
+// can't burn through the Anthropic monthly spend cap on their own.
+const DAILY_QUOTA = 50;
 
 const EXTRACT_TOOL = {
   name: "record_item",
@@ -94,8 +100,19 @@ Rules:
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  if (!req.headers.get("Authorization")) return json({ error: "Unauthorized" }, 401);
-  if (!anthropicKey) return json({ error: "ANTHROPIC_API_KEY not configured" }, 500);
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return json({ error: "Unauthorized" }, 401);
+  if (!anthropicKey) {
+    return json(
+      {
+        error: "ANTHROPIC_API_KEY not configured",
+        code: "service_unavailable",
+        user_message:
+          "Photo reading is temporarily unavailable. Please type the details in manually.",
+      },
+      503,
+    );
+  }
 
   let photoUrls: string[];
   let itemId: string | undefined;
@@ -110,6 +127,33 @@ Deno.serve(async (req) => {
     return json(
       { error: "Invalid request body — expected { photo_urls: string[], item_id?: string }" },
       400,
+    );
+  }
+
+  // User-scoped client so the quota RPC sees auth.uid() = the caller.
+  // verify_jwt = true (config.toml) ensures the JWT is already validated.
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: quota, error: quotaError } = await userClient.rpc(
+    "check_and_increment_quota",
+    { p_kind: "enrich_photos", p_limit: DAILY_QUOTA },
+  );
+  if (quotaError) {
+    return json({ error: `Quota check failed: ${quotaError.message}` }, 500);
+  }
+  const row = Array.isArray(quota) ? quota[0] : quota;
+  if (!row?.allowed) {
+    return json(
+      {
+        error: "Daily quota exceeded",
+        code: "quota_exceeded",
+        user_message:
+          `You've reached today's limit of ${DAILY_QUOTA} photo reads. Please try again tomorrow or fill in the details manually.`,
+        current_count: row?.current_count,
+        daily_limit: row?.daily_limit,
+      },
+      429,
     );
   }
 
@@ -150,6 +194,31 @@ Deno.serve(async (req) => {
 
     if (!resp.ok) {
       const errText = await resp.text();
+      // 429 from Anthropic = either rate limit or monthly spend cap hit.
+      // Both mean "stop calling for now" — surface a friendly message.
+      if (resp.status === 429) {
+        return json(
+          {
+            error: `Anthropic rate/spend limit: ${errText}`,
+            code: "service_unavailable",
+            user_message:
+              "Photo reading is temporarily unavailable due to high demand. Please try again later or fill in the details manually.",
+          },
+          503,
+        );
+      }
+      // 401/403 = our key is bad or revoked — same user-facing story.
+      if (resp.status === 401 || resp.status === 403) {
+        return json(
+          {
+            error: `Anthropic auth error: ${errText}`,
+            code: "service_unavailable",
+            user_message:
+              "Photo reading is temporarily unavailable. Please fill in the details manually.",
+          },
+          503,
+        );
+      }
       return json({ error: `Anthropic API error: ${resp.status} ${errText}` }, 502);
     }
 

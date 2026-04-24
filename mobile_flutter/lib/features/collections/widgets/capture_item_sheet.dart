@@ -196,11 +196,26 @@ class _CaptureItemSheetState extends State<CaptureItemSheet> {
           }
         }
       }
+    } on FunctionException catch (e) {
+      // The edge function returns a structured { user_message, code } body
+      // for quota/service errors — surface that instead of the raw exception.
+      if (mounted) setState(() => _error = _friendlyEdgeError(e, 'Could not read photos.'));
     } catch (e) {
       if (mounted) setState(() => _error = 'Could not read photos: $e');
     } finally {
       if (mounted) setState(() => _enriching = false);
     }
+  }
+
+  String _friendlyEdgeError(FunctionException e, String fallback) {
+    final details = e.details;
+    if (details is Map) {
+      final msg = details['user_message'];
+      if (msg is String && msg.isNotEmpty) return msg;
+      final err = details['error'];
+      if (err is String && err.isNotEmpty) return '$fallback ($err)';
+    }
+    return fallback;
   }
 
   // Pre-fills form fields from the vision output without overwriting anything
